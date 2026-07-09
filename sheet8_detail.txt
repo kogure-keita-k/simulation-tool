@@ -1,0 +1,98 @@
+Merged ranges:
+- A1:F1
+- A3:F3
+- A4:F4
+- A5:B5
+- C5:D5
+- E5:F5
+- A6:B6
+- C6:D6
+- E6:F6
+- A7:B7
+- C7:D7
+- E7:F7
+- A8:B8
+- C8:D8
+- E8:F8
+- A9:B9
+- C9:D9
+- E9:F9
+- A11:F11
+- A12:F12
+- A25:F25
+- A26:F26
+- A27:B27
+- C27:D27
+- E27:F27
+- A28:B28
+- C28:D28
+- E28:F28
+- A29:B29
+- C29:D29
+- E29:F29
+- A30:B30
+- C30:D30
+- E30:F30
+- A31:B31
+- C31:D31
+- E31:F31
+- A33:F33
+- A34:F34
+- A35:B35
+- C35:D35
+- E35:F35
+- A36:B36
+- C36:D36
+- E36:F36
+- A37:B37
+- C37:D37
+- E37:F37
+- A38:B38
+- C38:D38
+- E38:F38
+- A39:B39
+- C39:D39
+- E39:F39
+
+Cell values and types:
+Row 01: A1(Cell): '■ 08 経営者・社内稟議用サマリー\u3000\u3000NITTOKU（株）様\u3000空調デマンド制御 導入判断資料' | B1(MergedCell): None | C1(MergedCell): None | D1(MergedCell): None | E1(MergedCell): None | F1(MergedCell): None | G1(Cell): None
+Row 02: A2(Cell): None | B2(Cell): None | C2(Cell): None | D2(Cell): None | E2(Cell): None | F2(Cell): None | G2(Cell): None
+Row 03: A3(Cell): '▶ ① 当年 猛暑リスク予測（天候リスク補正：現状最大kW × 1.15倍）' | B3(MergedCell): None | C3(MergedCell): None | D3(MergedCell): None | E3(MergedCell): None | F3(MergedCell): None | G3(Cell): None
+Row 04: A4(Cell): '="🌞「2026年5月の時点でも夏のような記録的暑さ」── このまま何も対策をしなければ、今夏の最大デマンドは昨年比15%増の試算（" & TEXT(\'01_Master\'!B30*1.15, "#,##0") & " kW）となります。"' | B4(MergedCell): None | C4(MergedCell): None | D4(MergedCell): None | E4(MergedCell): None | F4(MergedCell): None | G4(Cell): None
+Row 05: A5(Cell): '現状（昨年最大）' | B5(MergedCell): None | C5(Cell): "='01_Master'!B30" | D5(MergedCell): None | E5(Cell): 'kW（昨年度実績ピーク）' | F5(MergedCell): None | G5(Cell): None
+Row 06: A6(Cell): '猛暑リスク想定' | B6(MergedCell): None | C6(Cell): '=C5*1.15' | D6(MergedCell): None | E6(Cell): 'kW（現状 × 1.15倍 天候補正）' | F6(MergedCell): None | G6(Cell): None
+Row 07: A7(Cell): '増加デマンド' | B7(MergedCell): None | C7(Cell): '=C6-C5' | D7(MergedCell): None | E7(Cell): 'kW' | F7(MergedCell): None | G7(Cell): None
+Row 08: A8(Cell): '年間基本料金 増分' | B8(MergedCell): None | C8(Cell): "=C7*'01_Master'!$B$14*12" | D8(MergedCell): None | E8(Cell): '円（基本料金単価×増分kW×12）' | F8(MergedCell): None | G8(Cell): None
+Row 09: A9(Cell): '⛑️ システム導入後' | B9(MergedCell): None | C9(Cell): "=C5-'01_Master'!B17" | D9(MergedCell): None | E9(Cell): 'kW 以下に抑制（防波堤効果：デマンドを確実にカット）' | F9(MergedCell): None | G9(Cell): None
+Row 10: A10(Cell): None | B10(Cell): None | C10(Cell): None | D10(Cell): None | E10(Cell): None | F10(Cell): None | G10(Cell): None
+Row 11: A11(Cell): '▶ ② 導入しなかった場合の「累積損失（機会損失）」' | B11(MergedCell): None | C11(MergedCell): None | D11(MergedCell): None | E11(MergedCell): None | F11(MergedCell): None | G11(Cell): None
+Row 12: A12(Cell): '  現状維持で何もしなかった場合、毎年の削減チャンスを失い続けます。3年目・5年目・10年目の累積損失を可視化しました。' | B12(MergedCell): None | C12(MergedCell): None | D12(MergedCell): None | E12(MergedCell): None | F12(MergedCell): None | G12(Cell): None
+Row 13: A13(Cell): '年次' | B13(Cell): '年間機会損失（円）' | C13(Cell): '累積損失（円）' | D13(Cell): '月換算' | E13(Cell): '損失の意味' | F13(Cell): None | G13(Cell): None
+Row 14: A14(Cell): '1年目' | B14(Cell): "='05_Investment_ROI'!$C$10" | C14(Cell): '=B14' | D14(Cell): '="月 "&TEXT(B14/12, "#,##0")&"円 × 12ヶ月"' | E14(Cell): None | F14(Cell): None | G14(Cell): None
+Row 15: A15(Cell): '2年目' | B15(Cell): "='05_Investment_ROI'!$C$10" | C15(Cell): '=C14+B15' | D15(Cell): '="月 "&TEXT(B15/12, "#,##0")&"円 × 24ヶ月"' | E15(Cell): None | F15(Cell): None | G15(Cell): None
+Row 16: A16(Cell): '3年目⚠️' | B16(Cell): "='05_Investment_ROI'!$C$10" | C16(Cell): '=C15+B16' | D16(Cell): '="月 "&TEXT(B16/12, "#,##0")&"円 × 36ヶ月"' | E16(Cell): '="💸 約3年で車1台分の損失（累積：" & TEXT(C16, "¥#,##0") & "）"' | F16(Cell): None | G16(Cell): None
+Row 17: A17(Cell): '4年目' | B17(Cell): "='05_Investment_ROI'!$C$10" | C17(Cell): '=C16+B17' | D17(Cell): '="月 "&TEXT(B17/12, "#,##0")&"円 × 48ヶ月"' | E17(Cell): None | F17(Cell): None | G17(Cell): None
+Row 18: A18(Cell): '5年目⚠️' | B18(Cell): "='05_Investment_ROI'!$C$10" | C18(Cell): '=C17+B18' | D18(Cell): '="月 "&TEXT(B18/12, "#,##0")&"円 × 60ヶ月"' | E18(Cell): '="💸💸 約5年で大規模リフォーム費相当（累積：" & TEXT(C18, "¥#,##0") & "）"' | F18(Cell): None | G18(Cell): None
+Row 19: A19(Cell): '6年目' | B19(Cell): "='05_Investment_ROI'!$C$10" | C19(Cell): '=C18+B19' | D19(Cell): '="月 "&TEXT(B19/12, "#,##0")&"円 × 72ヶ月"' | E19(Cell): None | F19(Cell): None | G19(Cell): None
+Row 20: A20(Cell): '7年目' | B20(Cell): "='05_Investment_ROI'!$C$10" | C20(Cell): '=C19+B20' | D20(Cell): '="月 "&TEXT(B20/12, "#,##0")&"円 × 84ヶ月"' | E20(Cell): None | F20(Cell): None | G20(Cell): None
+Row 21: A21(Cell): '8年目' | B21(Cell): "='05_Investment_ROI'!$C$10" | C21(Cell): '=C20+B21' | D21(Cell): '="月 "&TEXT(B21/12, "#,##0")&"円 × 96ヶ月"' | E21(Cell): None | F21(Cell): None | G21(Cell): None
+Row 22: A22(Cell): '9年目' | B22(Cell): "='05_Investment_ROI'!$C$10" | C22(Cell): '=C21+B22' | D22(Cell): '="月 "&TEXT(B22/12, "#,##0")&"円 × 108ヶ月"' | E22(Cell): None | F22(Cell): None | G22(Cell): None
+Row 23: A23(Cell): '10年目⚠️' | B23(Cell): "='05_Investment_ROI'!$C$10" | C23(Cell): '=C22+B23' | D23(Cell): '="月 "&TEXT(B23/12, "#,##0")&"円 × 120ヶ月"' | E23(Cell): '="💸💸💸 約10年で2,000万円規模の逸失（累積：" & TEXT(C23, "¥#,##0") & "）"' | F23(Cell): None | G23(Cell): None
+Row 24: A24(Cell): None | B24(Cell): None | C24(Cell): None | D24(Cell): None | E24(Cell): None | F24(Cell): None | G24(Cell): None
+Row 25: A25(Cell): '▶ ③ 利益の売上高換算・製品販売個数換算' | B25(MergedCell): None | C25(MergedCell): None | D25(MergedCell): None | E25(MergedCell): None | F25(MergedCell): None | G25(Cell): None
+Row 26: A26(Cell): '="  年間削減額 " & TEXT(C27, "#,##0") & "円は、想定営業利益率" & TEXT(C28, "0.0%") & "の企業が新規に獲得しなければならない売上高に換算すると…"' | B26(MergedCell): None | C26(MergedCell): None | D26(MergedCell): None | E26(MergedCell): None | F26(MergedCell): None | G26(Cell): None
+Row 27: A27(Cell): '年間削減額' | B27(MergedCell): None | C27(Cell): "='05_Investment_ROI'!$C$10" | D27(MergedCell): None | E27(Cell): 'コスト削減の実額' | F27(MergedCell): None | G27(Cell): None
+Row 28: A28(Cell): '想定営業利益率' | B28(MergedCell): None | C28(Cell): "='01_Master'!$B$18" | D28(MergedCell): None | E28(Cell): '製造業一般的水準（5%想定）' | F28(MergedCell): None | G28(Cell): None
+Row 29: A29(Cell): '単年 新規売上換算額' | B29(MergedCell): None | C29(Cell): '=C27/C28' | D29(MergedCell): None | E29(Cell): '削減額 ÷ 想定営業利益率' | F29(MergedCell): None | G29(Cell): None
+Row 30: A30(Cell): '10年 累積売上換算額' | B30(MergedCell): None | C30(Cell): '=C29*10' | D30(MergedCell): None | E30(Cell): '10年間の価値合計' | F30(MergedCell): None | G30(Cell): None
+Row 31: A31(Cell): '主力商品必要販売数' | B31(MergedCell): None | C31(Cell): "=ROUNDUP(C27/('01_Master'!$B$21*'01_Master'!$B$22), 0)" | D31(MergedCell): None | E31(Cell): '="本業の商品（単価" & TEXT(\'01_Master\'!B21, "#,##0") & "円・粗利" & TEXT(\'01_Master\'!B22, "0%") & "）をあと上記個数売るのと同じ純利益"' | F31(MergedCell): None | G31(Cell): None
+Row 32: A32(Cell): None | B32(Cell): None | C32(Cell): None | D32(Cell): None | E32(Cell): None | F32(Cell): None | G32(Cell): None
+Row 33: A33(Cell): '▶ ④ 環境価値（CO₂削減量・杉の木換算）' | B33(MergedCell): None | C33(MergedCell): None | D33(MergedCell): None | E33(MergedCell): None | F33(MergedCell): None | G33(Cell): None
+Row 34: A34(Cell): '="  空調制御による年間削減電力量 " & TEXT(\'03_Energy_Charge\'!C17, "#,##0") & " kWh から算出した環境負荷削減効果です。ESG・SDGs報告にも活用できます。"' | B34(MergedCell): None | C34(MergedCell): None | D34(MergedCell): None | E34(MergedCell): None | F34(MergedCell): None | G34(Cell): None
+Row 35: A35(Cell): '🌿 年間削減電力量' | B35(MergedCell): None | C35(Cell): "='03_Energy_Charge'!C17" | D35(MergedCell): None | E35(Cell): '空調制御効果' | F35(MergedCell): None | G35(Cell): None
+Row 36: A36(Cell): '☁ CO₂排出係数' | B36(MergedCell): None | C36(Cell): "='01_Master'!B16" | D36(MergedCell): None | E36(Cell): '管轄電力会社排出係数' | F36(MergedCell): None | G36(Cell): None
+Row 37: A37(Cell): '🌍 CO₂年間削減量' | B37(MergedCell): None | C37(Cell): '=C35*C36' | D37(MergedCell): None | E37(Cell): '="（" & TEXT(C37/1000, "0.00") & " t-CO₂/年）"' | F37(MergedCell): None | G37(Cell): None
+Row 38: A38(Cell): '🌲 杉の木換算' | B38(MergedCell): None | C38(Cell): '=C37/8.8' | D38(MergedCell): None | E38(Cell): '（1本あたり年間8.8kg吸収）' | F38(MergedCell): None | G38(Cell): None
+Row 39: A39(Cell): '🏭 SDGs貢献' | B39(MergedCell): None | C39(Cell): '目標7（エネルギー）・目標13（気候変動）' | D39(MergedCell): None | E39(Cell): 'ESGレポートへの活用を推奨' | F39(MergedCell): None | G39(Cell): None
+Row 40: A40(Cell): None | B40(Cell): None | C40(Cell): None | D40(Cell): None | E40(Cell): None | F40(Cell): None | G40(Cell): None
+Row 41: A41(Cell): None | B41(Cell): None | C41(Cell): None | D41(Cell): None | E41(Cell): None | F41(Cell): None | G41(Cell): None
