@@ -18,7 +18,10 @@ from __future__ import annotations
 
 import io
 import os
+import logging
 from typing import Sequence
+
+
 
 import matplotlib
 matplotlib.use("Agg")  # GUI 不要・サーバー描画
@@ -46,7 +49,7 @@ def set_jp_font() -> str:
     """利用可能な日本語フォントを matplotlib に設定し、フォント名を返す。"""
     fm._load_fontmanager(try_read_cache=False)
     names = {f.name for f in fm.fontManager.ttflist}
-     print(names) 
+    logging.warning(names)
 
     for cand in (
         "Noto Sans CJK JP",
