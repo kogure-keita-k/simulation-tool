@@ -44,13 +44,28 @@ HEAD_BG = NAVY
 
 def set_jp_font() -> str:
     """利用可能な日本語フォントを matplotlib に設定し、フォント名を返す。"""
+    fm._load_fontmanager(try_read_cache=False)
     names = {f.name for f in fm.fontManager.ttflist}
-    for cand in ("Meiryo", "Yu Gothic", "BIZ UDGothic", "MS Gothic", "MS PGothic"):
+
+    for cand in (
+        "Noto Sans CJK JP",
+        "Noto Sans JP",
+        "IPAexGothic",
+        "IPAGothic",
+        "Meiryo",
+        "Yu Gothic",
+        "BIZ UDGothic",
+        "MS Gothic",
+        "MS PGothic",
+    ):
         if cand in names:
             plt.rcParams["font.family"] = cand
             plt.rcParams["axes.unicode_minus"] = False
             return cand
-    return plt.rcParams.get("font.family", "sans-serif")
+
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["axes.unicode_minus"] = False
+    return "sans-serif"
 
 
 def _short_month_labels(months: Sequence) -> list[str]:
