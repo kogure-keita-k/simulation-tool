@@ -18,10 +18,7 @@ from __future__ import annotations
 
 import io
 import os
-import logging
 from typing import Sequence
-
-
 
 import matplotlib
 matplotlib.use("Agg")  # GUI 不要・サーバー描画
@@ -47,29 +44,13 @@ HEAD_BG = NAVY
 
 def set_jp_font() -> str:
     """利用可能な日本語フォントを matplotlib に設定し、フォント名を返す。"""
-    fm._load_fontmanager(try_read_cache=False)
     names = {f.name for f in fm.fontManager.ttflist}
-    print(names)
-
-    for cand in (
-        "Noto Sans CJK JP",
-        "Noto Sans JP",
-        "IPAexGothic",
-        "IPAGothic",
-        "Meiryo",
-        "Yu Gothic",
-        "BIZ UDGothic",
-        "MS Gothic",
-        "MS PGothic",
-    ):
+    for cand in ("Meiryo", "Yu Gothic", "BIZ UDGothic", "MS Gothic", "MS PGothic"):
         if cand in names:
             plt.rcParams["font.family"] = cand
             plt.rcParams["axes.unicode_minus"] = False
             return cand
-
-    plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["axes.unicode_minus"] = False
-    return "sans-serif"
+    return plt.rcParams.get("font.family", "sans-serif")
 
 
 def _short_month_labels(months: Sequence) -> list[str]:
