@@ -5109,7 +5109,7 @@ def show_control_mode(res: dict) -> None:
         </div>
         <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display:flex; flex-direction:column; justify-content:center;">
             <div style="font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 5px;">投資回収期間（年）</div>
-            <div style="font-size: 33px; font-weight: bold; color: #2F5496;">{payback_years_mode:.1f}{'<span style=\"font-size:13px;color:#C00000;\">（利用料超過）</span>' if _over_fee_mode else ''}</div>
+            <div style="font-size: 33px; font-weight: bold; color: #2F5496;">{payback_years_mode:.1f}{'<span style="font-size:13px;color:#C00000;">（利用料超過）</span>' if _over_fee_mode else ''}</div>
         </div>
     </div>
 </div>
