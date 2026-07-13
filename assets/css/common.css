@@ -1,0 +1,58 @@
+/* ============================================================
+   common.css ― 共通設定
+   ・リセット / body / h1〜h6 / p / a / button
+   ・color変数 / font
+   ・utility（.mt20 など）
+   読み込み順：common → layout → components → page
+   ============================================================ */
+
+/* ---- color変数 / font ---- */
+:root{
+  --navy:#13315C; --teal:#0E7C66; --teal-d:#0A5A4A; --ink:#1c2530; --muted:#5b6875;
+  --amber:#C4720A; --amber-bg:#FFF3E0; --line:#e3e8ee; --bg:#f5f7f9; --soft:#eef5f2;
+  /* 実アプリ準拠の色（画面再現図で使用） */
+  --sb:#1A2744; --sb-tx:#ECEFF4; --sb-sub:#aeb9cf; --sb-inp:#26324e; --sb-inpbd:#3c4a6b;
+  --run:#243360; --blue:#1668d6;
+}
+
+/* ---- リセット ---- */
+*{box-sizing:border-box;}
+
+/* ---- body ---- */
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;
+  line-height:1.7;font-size:15px;
+}
+
+/* ---- 見出し h1〜h6 ---- */
+h2{margin:0;font-size:20px;font-weight:800;color:var(--navy);}
+h3{margin:20px 0 6px;font-size:15.5px;color:var(--teal-d);font-weight:800;}
+
+/* ---- p / a / リスト / コード ---- */
+p{margin:8px 0;}
+a{color:var(--teal);}
+ul,ol{margin:8px 0 8px 2px;padding-left:22px;}
+li{margin:5px 0;}
+code{font-family:"Consolas","Courier New",monospace;background:#eef2f6;border:1px solid #e0e6ec;
+  padding:1px 6px;border-radius:5px;font-size:12.5px;color:#274156;}
+pre{background:#0f2033;color:#e6eefc;border-radius:10px;padding:13px 15px;overflow:auto;
+  font-family:"Consolas","Courier New",monospace;font-size:12.5px;line-height:1.6;}
+pre .c{color:#7fd1b9;}
+
+/* ---- utility ---- */
+.lead{color:var(--muted);font-size:13.5px;margin:2px 0 8px 40px;}
+/* 汎用マージン等（必要に応じて使用）
+.mt0{margin-top:0;} .mt10{margin-top:10px;} .mt20{margin-top:20px;}
+.mb10{margin-bottom:10px;} .mb20{margin-bottom:20px;}
+.tc{text-align:center;} .tr{text-align:right;} */
+@media (max-width:560px){ .lead{margin-left:0;} }
+
+/* ---- 印刷（ドキュメント全体） ---- */
+@media print{
+  body{background:#fff;}
+  section{box-shadow:none;break-inside:avoid;}
+  .screen{box-shadow:none;}
+  header.hero,.sb,.hdr,.up,.dl,.sb-run,.b-green,.b-amber,.b-navy,.kn{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}

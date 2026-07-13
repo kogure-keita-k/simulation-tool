@@ -3,334 +3,360 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DPS 空調デマンド制御 提案・稟議シミュレーター ― 説明書</title>
-<style>
-  :root{
-    --teal:#0E7C66; --teal-d:#0A5A4A; --navy:#13315C; --ink:#1c2530;
-    --amber:#B26A00; --amber-bg:#FFF4E0; --line:#e3e8ee; --muted:#5b6875;
-    --bg:#f6f8fa; --card:#ffffff; --green:#2E8B57; --soft:#eef5f2;
-  }
-  *{box-sizing:border-box;}
-  html{-webkit-text-size-adjust:100%;}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;
-    line-height:1.75; font-size:15.5px;
-  }
-  .wrap{max-width:960px; margin:0 auto; padding:0 20px 80px;}
-  a{color:var(--teal); }
-
-  /* Hero */
-  header.hero{
-    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-d) 100%);
-    color:#fff; padding:46px 20px 40px; text-align:left;
-  }
-  .hero-inner{max-width:960px;margin:0 auto;}
-  .badge{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
-    padding:3px 12px;border-radius:999px;font-size:12.5px;letter-spacing:.04em;margin-bottom:14px;}
-  header.hero h1{margin:0 0 8px;font-size:28px;line-height:1.35;font-weight:800;letter-spacing:.01em;}
-  header.hero p.sub{margin:0;font-size:15px;color:#d8e6e1;max-width:720px;}
-  .hero-meta{margin-top:18px;font-size:12.5px;color:#b9cdc7;}
-
-  /* Section */
-  section{background:var(--card);border:1px solid var(--line);border-radius:14px;
-    padding:26px 28px;margin:22px 0;box-shadow:0 1px 2px rgba(20,40,70,.04);}
-  .kicker{display:flex;align-items:center;gap:10px;margin:0 0 4px;}
-  .kicker .num{width:30px;height:30px;flex:0 0 30px;border-radius:8px;background:var(--soft);
-    color:var(--teal-d);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px;}
-  h2{margin:0;font-size:20px;font-weight:800;color:var(--navy);letter-spacing:.01em;}
-  h3{margin:22px 0 8px;font-size:16px;color:var(--teal-d);font-weight:800;}
-  p{margin:8px 0;}
-  .lead{color:var(--muted);margin:2px 0 6px 40px;font-size:13.5px;}
-  ul,ol{margin:8px 0 8px 4px;padding-left:22px;}
-  li{margin:5px 0;}
-  code,.mono{font-family:"Consolas","Courier New",monospace;background:#eef2f6;border:1px solid #e0e6ec;
-    padding:1.5px 6px;border-radius:5px;font-size:13px;color:#274156;}
-  pre{background:#0f2033;color:#e6eefc;border-radius:10px;padding:14px 16px;overflow:auto;
-    font-family:"Consolas","Courier New",monospace;font-size:13px;line-height:1.6;margin:10px 0;}
-  pre .c{color:#7fd1b9;}
-
-  /* Tables */
-  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;}
-  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;}
-  th{background:var(--soft);color:var(--navy);font-weight:700;}
-  td .must{color:#b0203a;font-weight:700;}
-  tr:nth-child(even) td{background:#fbfcfd;}
-  .tbl-wrap{overflow-x:auto;}
-
-  /* Callouts */
-  .note{border-left:4px solid var(--teal);background:#f0f7f4;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;}
-  .warn{border-left:4px solid var(--amber);background:var(--amber-bg);padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;}
-  .warn b,.note b{color:var(--navy);}
-
-  /* Steps */
-  .steps{counter-reset:step;margin:14px 0;}
-  .step{position:relative;padding:14px 16px 14px 60px;border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#fff;}
-  .step:before{counter-increment:step;content:counter(step);position:absolute;left:14px;top:14px;
-    width:32px;height:32px;background:var(--teal);color:#fff;border-radius:9px;font-weight:800;
-    display:flex;align-items:center;justify-content:center;font-size:16px;}
-  .step h4{margin:0 0 4px;font-size:15.5px;color:var(--navy);}
-  .step p{margin:2px 0;font-size:14px;}
-
-  /* Feature grid */
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0;}
-  .fcard{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#fff;}
-  .fcard .ic{font-size:22px;}
-  .fcard h4{margin:6px 0 4px;font-size:15px;color:var(--navy);}
-  .fcard p{margin:0;font-size:13.5px;color:var(--muted);}
-
-  .pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;}
-  .pill.req{background:#fde8ec;color:#b0203a;}
-  .pill.opt{background:#e8f2fd;color:#1c5aa6;}
-  .pill.real{background:var(--amber-bg);color:var(--amber);}
-
-  .toc{columns:2;column-gap:26px;font-size:14px;}
-  .toc a{display:block;padding:3px 0;text-decoration:none;color:var(--ink);border-bottom:1px dashed transparent;}
-  .toc a:hover{color:var(--teal);}
-
-  footer{max-width:960px;margin:40px auto 0;padding:0 20px;color:var(--muted);font-size:12.5px;text-align:center;}
-
-  @media (max-width:640px){
-    .toc{columns:1;} header.hero h1{font-size:23px;} .lead{margin-left:0;}
-    section{padding:20px 18px;}
-  }
-  @media print{
-    body{background:#fff;} section{box-shadow:none;break-inside:avoid;}
-    header.hero{background:var(--navy) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  }
-</style>
+<title>DPS 空調デマンド制御 シミュレーター ― 画面操作マニュアル</title>
+<link rel="stylesheet" href="assets/css/common.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/page.css">
 </head>
 <body>
 
 <header class="hero">
   <div class="hero-inner">
-    <span class="badge">社内向け説明書 / DPS シミュレーター</span>
-    <h1>DPS 空調デマンド制御<br>提案・稟議シミュレーター 説明書</h1>
-    <p class="sub">検針票12ヶ月のデータから、空調デマンド制御による<b style="color:#fff">電気料金の削減効果</b>と<b style="color:#fff">投資回収</b>を試算し、提案書・稟議書・報告書・請求書まで一気に出力するためのアプリです。本書は、導入手順・仕組み・必要なデータ・できることをまとめています。</p>
-    <div class="hero-meta">対象アプリ：DPS試算アプリ（Streamlit版）／このアプリで扱う中核の計算式は変更されていません。</div>
+    <span class="badge-top">画面操作マニュアル（実画面準拠）/ DPS シミュレーター</span>
+    <h1>DPS 空調デマンド制御 シミュレーター<br>― 実際の画面で、どこで何をすると、どうなるか</h1>
+    <p>実際のアプリ画面（左＝濃紺のサイドバー／右＝白いメイン画面）を忠実に再現した図に、操作の番号を重ねて解説します。図の色・並び・ボタン名・項目名は実画面と同じです。この1冊で、追加説明なしに操作できます。</p>
   </div>
 </header>
 
 <div class="wrap">
 
-  <!-- 目次 -->
-  <section aria-label="目次">
+  <section>
     <div class="kicker"><span class="num">◎</span><h2>目次</h2></div>
     <nav class="toc">
-      <a href="#about">1. このシステムの概要</a>
-      <a href="#setup">2. 導入手順（初回セットアップ）</a>
-      <a href="#quick">3. 最短5ステップ（すぐ提案書を出す）</a>
-      <a href="#required">4. 最低限インポートが必要な要素</a>
-      <a href="#realistic">5. この値を入れると"かなりリアル"に</a>
-      <a href="#outputs">6. これで何ができるか（出力物）</a>
-      <a href="#gaisan">7. 概算モード（機材情報が無いとき）</a>
-      <a href="#faq">8. 困ったとき・注意点</a>
+      <a href="#map">0. 画面の全体像（起動直後）</a>
+      <a href="#s1">STEP1. 検針票を取り込む</a>
+      <a href="#s2">STEP2. 顧客名・業態を選ぶ</a>
+      <a href="#s3">STEP3. 台数を決める（3方法）</a>
+      <a href="#s4">STEP4. 初期費用・ハードウェア</a>
+      <a href="#s5">STEP5. 🚀 実行 → 結果の見方</a>
+      <a href="#s6">STEP6. 資料を出力する</a>
+      <a href="#menu">メニュー（左上ボタン）早見表</a>
+      <a href="#setup">導入手順・FAQ</a>
     </nav>
   </section>
 
-  <!-- 1. 概要 -->
-  <section id="about">
-    <div class="kicker"><span class="num">1</span><h2>このシステムの概要</h2></div>
-    <p class="lead">「何をするアプリか」を最初に押さえておくと、以降の入力がスムーズです。</p>
-    <p>
-      本アプリは、顧客企業の<b>電力検針票（過去12ヶ月）</b>を起点に、空調のデマンド制御機器を導入した場合の
-      <b>年間削減額・投資回収期間</b>を試算します。数値を確定させると、そのまま
-      <b>提案書（PowerPoint）</b>・<b>稟議シート（Excel）</b>・<b>削減実績レポート</b>・<b>請求書</b>などを出力できます。
-    </p>
-    <div class="grid">
-      <div class="fcard"><div class="ic">📥</div><h4>入力</h4><p>検針票12ヶ月＋顧客名・業態。あれば室外機リスト（型番）で精緻化。</p></div>
-      <div class="fcard"><div class="ic">🧮</div><h4>試算</h4><p>基本料金（デマンド／力率）＋電力量の削減を実データベースで算出。</p></div>
-      <div class="fcard"><div class="ic">📊</div><h4>出力</h4><p>提案書・稟議Excel・削減レポ・請求書・スライド貼付PNGを生成。</p></div>
-      <div class="fcard"><div class="ic">💾</div><h4>管理</h4><p>案件の保存・検索・比較、入力条件のスナップショット、バックアップ。</p></div>
+  <!-- 0. 全体像 -->
+  <section id="map">
+    <div class="kicker"><span class="num">0</span><h2>画面の全体像（起動直後）</h2></div>
+    <p class="lead">左＝<b>濃紺のサイドバー</b>（メニュー＋入力＋🚀実行）／右＝<b>白いメイン画面</b>（案件ヘッダー＋検針票＋結果）。この配置が基本です。</p>
+    <div class="stepgrid">
+      <div>
+        <div class="screen">
+          <div class="hot" style="left:2%;top:23%">1</div>
+          <div class="hot" style="left:2%;top:47%">2</div>
+          <div class="hot" style="left:2%;top:88%">3</div>
+          <div class="hot" style="left:40%;top:10%">4</div>
+          <div class="hot" style="left:40%;top:52%">5</div>
+          <div class="app">
+            <div class="sb">
+              <div><span class="sb-ver">v1.11.4</span><div class="sb-brand">⚡ DPS シミュレーター<small>空調デマンド制御 提案・稟議</small></div></div>
+              <div class="sb-lbl">メニュー</div>
+              <div class="sb-menu">
+                <div class="sb-btn">ホーム</div><div class="sb-btn">各種設定</div>
+                <div class="sb-btn">操作ヘルプ</div><div class="sb-btn">結果一覧</div>
+                <div class="sb-btn">見積書作成</div><div class="sb-btn">削減レポ</div>
+              </div>
+              <div class="sb-wide">💾 入力条件のスナップショット</div>
+              <div class="sb-h">顧客情報</div>
+              <div class="sb-inp ph">顧客名</div>
+              <div class="sb-f">業態</div><div class="sb-sel">製造拠点(プロセス主役)</div>
+              <div class="sb-h">室外機情報</div>
+              <div class="sb-inp">総台数 34 ／ 制御 31</div>
+              <div class="sb-run">🚀 シミュレーション実行</div>
+            </div>
+            <div class="mn">
+              <div class="hdr">
+                <div><div class="sys">DPS 空調デマンド制御 提案・稟議シミュレーター</div>
+                  <div class="cust">（顧客名未入力）</div>
+                  <div class="meta">製造拠点(プロセス主役) ・ 2026-07-13</div></div>
+                <div class="R"><span class="pilb b-green">●AI判定：正常</span><span class="pilb b-amber">●決裁：準備中</span><span class="pilb b-navy">●担当：営業</span></div>
+              </div>
+              <div class="exp"><div class="exp-h">電力データ インポート / 手動入力</div>
+                <div class="exp-b"><div class="btnrow"><span class="up">⬆ Upload</span><span class="lt">サンプル値代入</span><span class="lt">インポート用テンプレDL</span></div>
+                  <table class="dt"><tr><th>月</th><th>契約電力</th><th>最大需要</th><th>使用電力量</th></tr>
+                    <tr><td>2025/04</td><td>650</td><td>394</td><td>117,801</td></tr>
+                    <tr><td>2025/05</td><td>650</td><td>474</td><td>116,755</td></tr></table>
+                </div></div>
+              <div class="exp"><div class="exp-h closed">機体（室外機）入力 — 型番から馬力を自動反映</div></div>
+              <div class="hint">👈 左側のサイドバーにある「🚀 シミュレーション実行」を押して、試算を開始してください。</div>
+            </div>
+          </div>
+        </div>
+        <p class="scr-cap">▲ 起動直後の実画面（配色・並び・名称は実物どおり／数値は例）</p>
+      </div>
+      <ul class="anno">
+        <li><span class="n">1</span><span class="tx"><b>メニュー（左上）</b>：ホーム／各種設定／操作ヘルプ／結果一覧／見積書作成／削減レポ。<span class="res">押すと画面が切り替わる（→ 早見表）</span></span></li>
+        <li><span class="n">2</span><span class="tx"><b>入力（サイドバー）</b>：顧客情報・室外機情報などを上から順に設定。<span class="res">ここの値が試算に反映</span></span></li>
+        <li><span class="n">3</span><span class="tx"><b>🚀 シミュレーション実行</b>（サイドバー最下部の濃紺ボタン）。<span class="res">メイン画面に結果が表示される</span></span></li>
+        <li><span class="n">4</span><span class="tx"><b>案件ヘッダー</b>：顧客名（御中）・業態・日付・状態バッジ。<span class="res">顧客名を入れると御中表示に変わる</span></span></li>
+        <li><span class="n">5</span><span class="tx"><b>メイン画面</b>：検針票の取込（折りたたみ）→ 実行後は結果がここに出る。</span></li>
+      </ul>
     </div>
-    <div class="note">
-      <b>ポイント：</b>入力できるデータが増えるほど「業界平均の仮置き」から「その現場の実データ」に切り替わり、算出がリアルになります。
-      まずは検針票だけでも試算でき、機材情報が無ければ<b>概算モード</b>で当たりを付けられます。
+    <div class="flow">
+      <span class="node">① 検針票</span><span class="ar">▶</span><span class="node">② 顧客名・業態</span><span class="ar">▶</span>
+      <span class="node">③ 台数</span><span class="ar">▶</span><span class="node">④ 費用</span><span class="ar">▶</span>
+      <span class="node">🚀 実行</span><span class="ar">▶</span><span class="node">⑥ 出力</span>
     </div>
   </section>
 
-  <!-- 2. 導入手順 -->
+  <!-- STEP1 -->
+  <section id="s1">
+    <div class="kicker"><span class="num">1</span><h2>STEP1. 検針票を取り込む（メイン画面）</h2></div>
+    <p class="lead">メイン画面の「<b>▾ 電力データ インポート / 手動入力</b>」を開いて行います。</p>
+    <div class="stepgrid">
+      <div>
+        <div class="screen">
+          <div class="hot" style="left:6%;top:34%">1</div>
+          <div class="hot" style="left:33%;top:34%">2</div>
+          <div class="hot" style="left:62%;top:34%">3</div>
+          <div class="hot" style="left:6%;top:66%">4</div>
+          <div class="mn" style="border-radius:10px">
+            <div class="exp"><div class="exp-h">電力データ インポート / 手動入力 (指定外フォーマットも内容から自動取込)</div>
+              <div class="exp-b">
+                <div class="btnrow"><span class="up">⬆ Upload</span><span class="lt">サンプル値代入</span><span class="lt">インポート用テンプレDL</span></div>
+                <div style="font-size:8px;color:#1E8E4B;margin:2px 0 6px">✅ 取り込みました：12行 ／ 主要列 7/7 を認識</div>
+                <div style="font-size:8.5px;color:#334;font-weight:700;margin-bottom:2px">手動データ編集テーブル</div>
+                <table class="dt">
+                  <tr><th>月</th><th>契約電力(kW)</th><th>最大需要(kW)</th><th>使用電力量(kWh)</th><th>力率調整</th><th>基本単価(円/kW)</th><th>電力量単価</th></tr>
+                  <tr><td>2025/04</td><td>650</td><td>394</td><td>117,801</td><td>1.00</td><td>2,350</td><td>28.6</td></tr>
+                  <tr><td>2025/05</td><td>650</td><td>474</td><td>116,755</td><td>1.00</td><td>2,350</td><td>28.6</td></tr>
+                  <tr><td>2025/06</td><td>650</td><td>501</td><td>138,470</td><td>1.00</td><td>2,350</td><td>28.6</td></tr>
+                </table>
+              </div></div>
+          </div>
+        </div>
+        <p class="scr-cap">▲「電力データ インポート / 手動入力」を開いた状態</p>
+      </div>
+      <ul class="anno">
+        <li><span class="n">1</span><span class="tx"><b>Upload</b>（青ボタン）：検針票Excel/CSVを選択。<span class="res">列を自動認識して表に反映（「7/7認識」表示）</span></span></li>
+        <li><span class="n">2</span><span class="tx"><b>サンプル値代入</b>：ダミー一式を投入。<span class="res">検針票が無くても試算を試せる</span></span></li>
+        <li><span class="n">3</span><span class="tx"><b>インポート用テンプレDL</b>：正しい列並びの空Excel。<span class="res">これに入力すれば確実に取込</span></span></li>
+        <li><span class="n">4</span><span class="tx"><b>手動データ編集テーブル</b>：セルを直接修正、行の追加・削除も可。<span class="res">直すと即・試算に反映</span></span></li>
+      </ul>
+    </div>
+    <div class="note"><b>必要な列（7つ）：</b>月／契約電力／最大需要電力／使用量合計／力率／基本料金単価／電力量単価。検針年月は <code>2025/04</code> または <code>202504</code>。見出し行は変更しないでください。</div>
+  </section>
+
+  <!-- STEP2 -->
+  <section id="s2">
+    <div class="kicker"><span class="num">2</span><h2>STEP2. 顧客名・業態を選ぶ（サイドバー「顧客情報」）</h2></div>
+    <div class="stepgrid">
+      <div>
+        <div class="screen">
+          <div class="hot" style="left:8%;top:37%">1</div>
+          <div class="hot" style="left:8%;top:63%">2</div>
+          <div class="app"><div class="sb" style="flex-basis:100%;max-width:100%">
+            <div class="sb-h" style="border-top:none;padding-top:0">顧客情報</div>
+            <div class="sb-f">顧客名</div><div class="sb-inp">ライオン菓子株式会社</div>
+            <div class="sb-f">業態</div><div class="sb-sel">製造拠点(プロセス主役)</div>
+            <div class="sb-note">空調割合想定（自動反映）：最大デマンド 18％ ／ 使用量 15％</div>
+          </div></div>
+        </div>
+        <p class="scr-cap">▲ サイドバー「顧客情報」（実物の濃紺画面）</p>
+      </div>
+      <ul class="anno">
+        <li><span class="n">1</span><span class="tx"><b>顧客名</b>：提案書の宛名（御中）になる。<span class="res">出力ファイル名にも自動で入る</span></span></li>
+        <li><span class="n">2</span><span class="tx"><b>業態</b>：一覧から選択。<span class="res">その業態の空調割合（標準値）が自動反映され、試算の前提になる</span></span></li>
+      </ul>
+    </div>
+    <div class="note">実態に合わせたい場合は業態で <b>「その他※数値を指定する」</b> を選ぶと、空調割合（%）を手入力できます。</div>
+  </section>
+
+  <!-- STEP3 -->
+  <section id="s3">
+    <div class="kicker"><span class="num">3</span><h2>STEP3. 台数を決める ― 3つの方法（サイドバー「室外機情報」）</h2></div>
+    <p class="lead">精度は <b>B（型番）＞ A（台数）＞ C（概算）</b>。持っている情報で選びます。</p>
+
+    <h3>方法A：台数を手入力（機材の台数が分かる）</h3>
+    <div class="stepgrid">
+      <div><div class="screen"><div class="hot" style="left:8%;top:34%">1</div><div class="hot" style="left:8%;top:60%">2</div>
+        <div class="app"><div class="sb" style="flex-basis:100%;max-width:100%">
+          <div class="sb-h" style="border-top:none;padding-top:0">室外機情報</div>
+          <div class="sb-tgl"><span class="kn"></span>🔧 機材情報なし → 検針票から概算する</div>
+          <div class="sb-f">室外機 総台数</div><div class="sb-inp">34</div>
+          <div class="sb-f">うち制御対象台数</div><div class="sb-inp">31</div>
+          <div class="sb-note" style="color:#cdd8ea">制御対象率: 91% (31/34台)</div>
+        </div></div></div></div>
+      <ul class="anno">
+        <li><span class="n">1</span><span class="tx"><b>総台数</b>を入力。</span></li>
+        <li><span class="n">2</span><span class="tx"><b>制御対象台数</b>を入力。<span class="res">制御対象率が自動計算され、削減量・初期費用の基礎に</span></span></li>
+      </ul>
+    </div>
+
+    <h3>方法B：機体（型番）を入力 ― 最も精緻</h3>
+    <div class="stepgrid">
+      <div><div class="screen"><div class="hot" style="left:5%;top:30%">1</div><div class="hot" style="left:80%;top:30%">2</div>
+        <div class="mn" style="border-radius:10px">
+          <div class="exp"><div class="exp-h">機体（室外機）入力 — 型番から馬力を自動反映</div>
+            <div class="exp-b"><table class="dt">
+              <tr><th>機器ID/場所</th><th>メーカー</th><th>型番</th><th>稼働係数</th><th>制御可否</th></tr>
+              <tr><td>1F-A</td><td>三菱電機</td><td>PUZ-ERMP280KA4</td><td>0.80</td><td>○</td></tr>
+              <tr><td>2F-A</td><td>ダイキン</td><td>RZRP224</td><td>0.70</td><td>○</td></tr>
+              <tr><td>サーバー室</td><td>三菱電機</td><td>MUCZ-G5617S</td><td>0.50</td><td>×</td></tr></table>
+              <div style="font-size:8px;color:#1E8E4B;margin-top:4px">📋 室外機リスト検出：3台（制御対象 2台）／容量加重で精緻化中</div>
+            </div></div></div></div></div>
+      <ul class="anno">
+        <li><span class="n">1</span><span class="tx"><b>型番</b>を入力（Excel室外機リストの取込でも可）。<span class="res">型番→定格能力を判定し容量加重で制御比率を精緻化</span></span></li>
+        <li><span class="n">2</span><span class="tx"><b>制御可否</b>を ○/× で指定。<span class="res">×は対象外。台数だけより実態に近い削減量に</span></span></li>
+      </ul>
+    </div>
+
+    <h3>方法C：概算モード（機材情報が無い）</h3>
+    <div class="stepgrid">
+      <div><div class="screen"><div class="hot" style="left:8%;top:22%">1</div><div class="hot" style="left:8%;top:46%">2</div><div class="hot" style="left:8%;top:76%">3</div>
+        <div class="app"><div class="sb" style="flex-basis:100%;max-width:100%">
+          <div class="sb-h" style="border-top:none;padding-top:0">室外機情報</div>
+          <div class="sb-tgl on"><span class="kn"></span>🔧 機材情報なし → 検針票から概算する</div>
+          <div style="font-size:8.5px;color:#dbe3f0;background:#26324e;border:1px solid #3c4a6b;border-radius:5px;padding:5px 7px;margin:3px 0">
+            概算台数：空調ピーク 100kW ÷ 標準室外機 10.0kW ≒ <b style="color:#fff">約 10 台</b>（推定）</div>
+          <div class="sb-tgl"><span class="kn"></span>🔧 概算の前提（この案件用に調整）</div>
+          <div class="sb-f">標準室外機 定格出力（kW/台）</div><div class="sb-inp">10.0</div>
+          <div class="sb-f">概算 制御比率（％）</div><div class="sb-inp">90</div>
+        </div></div></div></div>
+      <ul class="anno">
+        <li><span class="n">1</span><span class="tx"><b>概算トグルON</b>。<span class="res">検針票の空調ピーク÷定格出力で台数を自動推定（「≒約N台」）</span></span></li>
+        <li><span class="n">2</span><span class="tx"><b>推定台数</b>をそのまま試算に使用（手動微調整も可）。<span class="res">初期費用も標準単価×台数で自動概算</span></span></li>
+        <li><span class="n">3</span><span class="tx"><b>概算の前提</b>で定格出力・制御比率・単価を調整。<span class="res">現場感に合わせて概算を寄せられる</span></span></li>
+      </ul>
+    </div>
+    <div class="warn"><b>概算モードのとき</b>は提案書に自動で「概算です」の注記と概算説明ページが入り、結果は<b>3シナリオ（ベスト／標準／保守）</b>で幅を提示できます。</div>
+  </section>
+
+  <!-- STEP4 -->
+  <section id="s4">
+    <div class="kicker"><span class="num">4</span><h2>STEP4. 初期費用・ハードウェア（サイドバー）</h2></div>
+    <div class="stepgrid">
+      <div><div class="screen"><div class="hot" style="left:8%;top:18%">1</div><div class="hot" style="left:8%;top:44%">2</div><div class="hot" style="left:8%;top:80%">3</div>
+        <div class="app"><div class="sb" style="flex-basis:100%;max-width:100%">
+          <div class="sb-h" style="border-top:none;padding-top:0">初期費用</div>
+          <div class="sb-tgl"><span class="kn"></span>詳細見積（見積書方式）で算出</div>
+          <div class="sb-f">材料費（円）</div><div class="sb-inp">1,000,000</div>
+          <div class="sb-f">工事費（円）</div><div class="sb-inp">500,000</div>
+          <div class="sb-note">交通費（概算）：¥200,000</div>
+          <div class="sb-h">ハードウェア関連</div>
+          <div class="sb-note" style="color:#cdd8ea">ハードウェア関連費：¥283,140</div>
+        </div></div></div></div>
+      <ul class="anno">
+        <li><span class="n">1</span><span class="tx"><b>詳細見積トグル</b>：OFF＝概算入力、ON＝人数・日数・地区で見積書方式。<span class="res">情報量に合わせて選べる</span></span></li>
+        <li><span class="n">2</span><span class="tx"><b>材料費・工事費</b>を入力（概算モード時は自動）。<span class="res">総初期投資額に加算</span></span></li>
+        <li><span class="n">3</span><span class="tx"><b>ハードウェア関連</b>：機材を表で入力（Excel取込可）。<span class="res">売価×数量が初期費用へ加算</span></span></li>
+      </ul>
+    </div>
+    <div class="note">この下に「年間システム利用料」「空調システム構築費」もあります。不明な項目は空欄／既定のままでOK（あとで精緻化可）。</div>
+  </section>
+
+  <!-- STEP5 -->
+  <section id="s5">
+    <div class="kicker"><span class="num">5</span><h2>STEP5. 🚀 実行 → 結果の見方（メイン画面）</h2></div>
+    <p class="lead">サイドバー最下部の <b>🚀 シミュレーション実行</b>（濃紺ボタン）を押すと、メイン画面に結果が出ます。<span style="color:#8a97a4">※数値は「サンプル値代入」での実値例。</span></p>
+    <div class="stepgrid">
+      <div>
+        <div class="screen">
+          <div class="hot" style="left:4%;top:8%">1</div>
+          <div class="hot" style="left:5%;top:44%">2</div>
+          <div class="hot" style="left:37%;top:44%">3</div>
+          <div class="hot" style="left:69%;top:44%">4</div>
+          <div class="hot" style="left:5%;top:86%">5</div>
+          <div class="mn" style="border-radius:10px">
+            <div class="sb-run" style="max-width:180px;margin:0 0 8px">🚀 シミュレーション実行</div>
+            <div class="subttl">財務サマリー（導入効果の総括）</div>
+            <div class="kpis">
+              <div class="kpi"><div class="l">初期費用（総投資額）</div><div class="v">¥615,140</div></div>
+              <div class="kpi"><div class="l">年間 純削減額</div><div class="v">¥885,081</div><div class="d">▲ 経費削減</div></div>
+              <div class="kpi"><div class="l">投資回収期間（ROI）</div><div class="v">0.70 年</div><div class="d">✅ 3年回収圏内</div></div>
+            </div>
+            <div class="subttl">今後10年間の財務（NPV / IRR）</div>
+            <div class="kpis" style="grid-template-columns:1fr 1fr">
+              <div class="kpi"><div class="l">NPV（10年）</div><div class="v">¥6,219,221</div></div>
+              <div class="kpi"><div class="l">IRR</div><div class="v">143.9 %</div></div>
+            </div>
+            <div class="subttl">最大デマンド／使用量の比較</div>
+            <div class="bars"><span class="b" style="height:70%"></span><span class="b n" style="height:52%"></span><span class="b" style="height:85%"></span><span class="b n" style="height:63%"></span><span class="b" style="height:60%"></span><span class="b n" style="height:45%"></span></div>
+          </div>
+        </div>
+        <p class="scr-cap">▲ 実行後の結果画面（サンプル値での実際の数値例）</p>
+      </div>
+      <ul class="anno">
+        <li><span class="n">1</span><span class="tx"><b>🚀 実行</b>を押す。<span class="res">入力を確定して試算し、下に結果が並ぶ</span></span></li>
+        <li><span class="n">2</span><span class="tx"><b>初期費用（総投資額）</b>。<span class="res">STEP4で入れた費用の合計（例：¥615,140）</span></span></li>
+        <li><span class="n">3</span><span class="tx"><b>年間 純削減額</b>。<span class="res">1年で減る電気代の手残り（例：¥885,081）</span></span></li>
+        <li><span class="n">4</span><span class="tx"><b>投資回収期間（ROI）</b>。<span class="res">3年以内なら「回収圏内」。提案の決め手（例：0.70年）</span></span></li>
+        <li><span class="n">5</span><span class="tx"><b>NPV/IRR・比較グラフ</b>。<span class="res">10年の財務と導入前後の見える化。提案書にも使える</span></span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP6 -->
+  <section id="s6">
+    <div class="kicker"><span class="num">6</span><h2>STEP6. 資料を出力する（結果画面の下部）</h2></div>
+    <div class="stepgrid">
+      <div>
+        <div class="screen">
+          <div class="hot" style="left:5%;top:32%">1</div>
+          <div class="hot" style="left:54%;top:32%">2</div>
+          <div class="hot" style="left:5%;top:78%">3</div>
+          <div class="mn" style="border-radius:10px">
+            <div class="subttl">シミュレーション結果 一括ダウンロード</div>
+            <div class="dlgrid">
+              <div><div style="font-size:8px;color:#5a6673;margin-bottom:3px">Excel稟議対応シート</div><div class="dl">📥 Excel稟議シートをDL</div></div>
+              <div><div style="font-size:8px;color:#5a6673;margin-bottom:3px">PowerPoint提案書</div><div class="dl">📥 PowerPoint提案書をDL</div></div>
+            </div>
+            <div class="subttl">🖼 スライド貼付用 画像出力 ／ 💾 結果一覧に保存</div>
+            <div class="btnrow"><span class="lt">画像を生成</span><span class="lt">結果一覧に保存</span></div>
+          </div>
+        </div>
+        <p class="scr-cap">▲ 出力ボタン群（結果画面の下部）</p>
+      </div>
+      <ul class="anno">
+        <li><span class="n">1</span><span class="tx"><b>Excel稟議シートをDL</b>。<span class="res">顧客提示用サマリー＋財務シート（社内稟議に）</span></span></li>
+        <li><span class="n">2</span><span class="tx"><b>PowerPoint提案書をDL</b>。<span class="res">KPI・グラフ・10年収支などのスライドを自動生成</span></span></li>
+        <li><span class="n">3</span><span class="tx"><b>画像出力／結果一覧に保存</b>。<span class="res">貼付用PNGを書き出し／案件を保存して後で検索・比較</span></span></li>
+      </ul>
+    </div>
+    <div class="note">出力ファイル名は <code>エクスポート年月日_企業名_種別.拡張子</code>（例 <code>20260713_ゼンケン_提案書.pptx</code>）で自動命名されます。</div>
+  </section>
+
+  <!-- MENU -->
+  <section id="menu">
+    <div class="kicker"><span class="num">＊</span><h2>メニュー（左上ボタン）早見表</h2></div>
+    <p class="lead">サイドバー上部「メニュー」のボタンで画面を切り替えます。</p>
+    <table class="ref">
+      <thead><tr><th style="width:24%">ボタン</th><th>そこで何をする → どうなる</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill">ホーム</span></td><td>試算のメイン画面（本書STEP1〜6）に戻る。</td></tr>
+        <tr><td><span class="pill">各種設定</span></td><td>計算ロジック・単価/業態マスタ・概算前提の編集、画像出力（手動値）、<b>データ管理（バックアップ/復元）</b>。→ 全試算に効く設定を管理。</td></tr>
+        <tr><td><span class="pill">操作ヘルプ</span></td><td>アプリ内の操作説明。</td></tr>
+        <tr><td><span class="pill">結果一覧</span></td><td>保存案件を一覧・<b>検索</b>・<b>2〜3件の並べて比較</b>・削除。</td></tr>
+        <tr><td><span class="pill">見積書作成</span></td><td>機材・工事の<b>見積書</b>（PDF/Excel）を作成。</td></tr>
+        <tr><td><span class="pill">削減レポ</span></td><td>運用後、前年比の<b>電力削減実績報告書</b>（PDF/Excel）を作成。</td></tr>
+        <tr><td><span class="pill">💾 スナップショット</span></td><td>メニュー直下。現在の入力一式を保存／呼び出し／別PCへ受け渡し。→ 同じ条件を再現。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SETUP -->
   <section id="setup">
-    <div class="kicker"><span class="num">2</span><h2>導入手順（初回セットアップ）</h2></div>
-    <p class="lead">Windows PC を想定。フォルダを丸ごと受け取り、以下を1回だけ実施します。</p>
-    <div class="steps">
-      <div class="step">
-        <h4>Python を入れる（未導入の場合）</h4>
-        <p><a href="https://www.python.org/downloads/">python.org</a> から Python 3.9 以上をインストール。インストーラの「Add python to PATH」にチェック。</p>
-        <p class="lead" style="margin-left:0">※ このPCでは <code>python</code> が旧版(2.7)のことがあるため、コマンドは必ず <code>py -3</code> を使います。</p>
-      </div>
-      <div class="step">
-        <h4>必要ライブラリを入れる（初回のみ）</h4>
-        <p>アプリのフォルダを開き、そこでコマンド プロンプトを起動して実行：</p>
-        <pre><span class="c"># アプリのフォルダ内で 1 回だけ</span>
-py -3 -m pip install -r requirements.txt</pre>
-      </div>
-      <div class="step">
-        <h4>アプリを起動する</h4>
-        <p><code>start.bat</code> をダブルクリック。または、コマンドで：</p>
-        <pre>py -3 -m streamlit run app.py</pre>
-        <p>自動でブラウザが開きます。開かない場合は表示された <code>http://localhost:8501</code> を開いてください。停止は <code>Ctrl + C</code>。</p>
-      </div>
-    </div>
-    <div class="warn">
-      <b>起動できない／不安定なとき：</b>「Starting the CLR failed…」等が出ることがありますが一時的なものです。
-      <b>ターミナルを開き直す</b>か <b>PCを再起動</b>すると解消します。
-    </div>
-    <p style="font-size:13.5px;color:var(--muted)">
-      同梱の <code>はじめにお読みください.txt</code>・<code>操作マニュアル_本文.md</code> も併せてご参照ください。
-    </p>
-  </section>
-
-  <!-- 3. クイックスタート -->
-  <section id="quick">
-    <div class="kicker"><span class="num">3</span><h2>最短5ステップ（すぐ提案書を出す）</h2></div>
+    <div class="kicker"><span class="num">＋</span><h2>導入手順・FAQ</h2></div>
+    <h3>初回セットアップ（Windows）</h3>
     <ol>
-      <li><b>検針票を取込</b> … サイドバーの「検針票データ」でExcelをアップロード（無ければサンプル値で試せます）。</li>
-      <li><b>顧客名・業態を選ぶ</b> … 会社名（御中）と業態を指定。業態で空調割合の標準値が自動反映。</li>
-      <li><b>台数を入れる</b> … 室外機の総台数・制御台数。分からなければ「機材情報なし→検針票から概算する」をON。</li>
-      <li><b>初期費用</b> … 分かる範囲で入力（概算モードなら自動で概算）。</li>
-      <li><b>「試算実行」</b> … 回収年数などを確認し、<b>PowerPoint/Excel をダウンロード</b>。</li>
+      <li>Python 3.9以上を <a href="https://www.python.org/downloads/">python.org</a> から導入（「Add python to PATH」にチェック）。※コマンドは <code>py -3</code>。</li>
+      <li>アプリのフォルダで初回のみ：<pre><span class="c"># 必要ライブラリ（初回だけ）</span>
+py -3 -m pip install -r requirements.txt</pre></li>
+      <li>起動：<code>start.bat</code> をダブルクリック、または <pre>py -3 -m streamlit run app.py</pre>ブラウザが自動で開きます（開かなければ <code>http://localhost:8501</code>）。停止は <code>Ctrl + C</code>。</li>
     </ol>
-    <div class="note">迷ったら <b>②顧客名・業態 → ①検針票 → ③台数 → ⑤試算実行</b> だけでOK。あとから精緻化できます。</div>
-  </section>
-
-  <!-- 4. 必須 -->
-  <section id="required">
-    <div class="kicker"><span class="num">4</span><h2>最低限インポートが必要な要素</h2></div>
-    <p class="lead">これだけあれば試算できます。検針票の月次データ（12ヶ月分）＝以下の7列が必須です。</p>
-    <div class="tbl-wrap">
-    <table>
-      <thead><tr><th style="width:34%">列名（必須）</th><th>意味・使いどころ</th></tr></thead>
-      <tbody>
-        <tr><td><span class="must">月</span></td><td>検針年月。<code>2025/04</code> または <code>202504</code> 形式。</td></tr>
-        <tr><td><span class="must">契約電力</span>(kW)</td><td>基本料金の基準。デマンド削減後の契約見直し効果の起点。</td></tr>
-        <tr><td><span class="must">最大需要電力</span>(kW)</td><td>デマンドのピーク。<b>削減量の要</b>（下の「リアルになる値」参照）。</td></tr>
-        <tr><td><span class="must">使用量合計</span>(kWh)</td><td>月間の使用電力量。電力量料金の削減の基礎。</td></tr>
-        <tr><td><span class="must">力率</span></td><td>基本料金の力率調整（割引/割増）に使用。</td></tr>
-        <tr><td><span class="must">基本料金単価</span>(円/kW)</td><td>契約電力×単価×力率調整＝基本料金。</td></tr>
-        <tr><td><span class="must">電力量単価</span>(円/kWh)</td><td>使用量×単価＝電力量料金。</td></tr>
-      </tbody>
-    </table>
-    </div>
-    <p>加えて、画面側で <b>顧客名</b> と <b>業態</b> を選べば試算実行できます。
-       取込用テンプレートはアプリ内の「インポート用テンプレDL」から入手できます。</p>
-    <div class="note"><b>検針年月の書式：</b><code>2025年4月</code> / <code>2025/04</code> / <code>202504</code> のいずれでもOK。列名（見出し行）は変更しないでください。</div>
-  </section>
-
-  <!-- 5. リアルになる値 -->
-  <section id="realistic">
-    <div class="kicker"><span class="num">5</span><h2>この値を入れると"かなりリアル"に</h2></div>
-    <p class="lead">必須項目は業界平均などの「仮置き」で動きますが、以下を入れるほど<b>その現場の実データ</b>に切り替わり、算出精度が上がります。</p>
-    <div class="tbl-wrap">
-    <table>
-      <thead><tr><th style="width:30%">入れると効く値</th><th>何がリアルになるか</th><th style="width:14%">区分</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><b>室外機リスト（型番付き）</b><br><span class="lead" style="margin:0">機器ID/場所・メーカー・型番・制御可否(○/×)</span></td>
-          <td>型番→定格（冷房能力）から<b>容量加重で制御比率を精緻化</b>。台数だけの概算より削減量が実態に近づきます。制御可否(○/×)で対象機器を指定。</td>
-          <td><span class="pill real">精度↑</span></td>
-        </tr>
-        <tr>
-          <td><b>最大需要電力（実測）</b></td>
-          <td>デマンド削減が<b>実測ピークベース</b>に。空欄だと使用量比から推定になるため、実測があるほど基本料金削減が正確に。</td>
-          <td><span class="pill real">精度↑</span></td>
-        </tr>
-        <tr>
-          <td><b>力率（実測）</b></td>
-          <td>基本料金の<b>力率割引/割増</b>を実態に合わせて反映（0.85基準）。優良な力率の顧客ほど効果が精確に出ます。</td>
-          <td><span class="pill real">精度↑</span></td>
-        </tr>
-        <tr>
-          <td><b>基本料金単価（月別）</b></td>
-          <td>タリフの実値を月別に入れると、季節でタリフが変わる契約でも基本料金がリアルに。</td>
-          <td><span class="pill real">精度↑</span></td>
-        </tr>
-        <tr>
-          <td><b>燃料費調整額（円/kWh・月別）</b></td>
-          <td>電力量単価へ<b>自動加算して反映</b>。マイナス月もそのまま反映され、実際の従量単価に近づきます。</td>
-          <td><span class="pill real">精度↑</span></td>
-        </tr>
-        <tr>
-          <td><b>再エネ賦課金（円/kWh）</b></td>
-          <td>同じく電力量単価へ<b>自動加算して反映</b>。入れないと自動で除外されます。</td>
-          <td><span class="pill real">精度↑</span></td>
-        </tr>
-        <tr>
-          <td><b>業態の空調割合（手動指定）</b></td>
-          <td>「その他※数値を指定する」を選ぶと、最大デマンド／使用量に占める空調割合を手入力でき、業態平均より実態に寄せられます。</td>
-          <td><span class="pill real">精度↑</span></td>
-        </tr>
-        <tr>
-          <td><b>概算の前提（概算モード時）</b><br><span class="lead" style="margin:0">標準室外機の定格出力(kW/台) など</span></td>
-          <td>概算台数＝空調ピーク÷定格出力。<b>定格出力・制御比率・単価を案件ごとに手入力</b>して、概算でも現場感に合わせられます。</td>
-          <td><span class="pill real">精度↑</span></td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-    <div class="warn">
-      <b>任意だが現状は計算未反映の欄：</b>「夏季ピーク／平日昼間／夜間休日」の時間帯別使用量・単価、および「市場価格調整項」は
-      テンプレに<b>欄はあるものの現時点では試算に反映されません</b>（将来拡張用・空欄でOK）。上表の「精度↑」項目とは別扱いです。
-    </div>
-    <div class="note"><b>まとめ：</b>最短は「必須7列＋顧客名・業態」。より本気の提案には <b>①室外機リスト（型番）②実測の最大需要電力・力率 ③燃料費調整額・再エネ賦課金</b> を入れると、数字の説得力が大きく変わります。</div>
-  </section>
-
-  <!-- 6. できること -->
-  <section id="outputs">
-    <div class="kicker"><span class="num">6</span><h2>これで何ができるか（出力物）</h2></div>
-    <p class="lead">試算が確定すると、提案〜運用後まで一通りの資料をこのアプリから出力できます。</p>
-    <div class="grid">
-      <div class="fcard"><div class="ic">📑</div><h4>提案書（PowerPoint）</h4><p>KPIカード・分析手法・デマンドグラフ・10年収支・制御可否リスト等をフルビルド。</p></div>
-      <div class="fcard"><div class="ic">📗</div><h4>稟議シート（Excel）</h4><p>顧客提示用サマリー＋財務対応シート。稟議・社内検討用。</p></div>
-      <div class="fcard"><div class="ic">📉</div><h4>削減実績レポート</h4><p>運用後、前年比の削減実績を報告書（PDF/Excel）で作成。</p></div>
-      <div class="fcard"><div class="ic">🧾</div><h4>請求書</h4><p>成果報酬型の請求書（PDF/Excel）を作成。</p></div>
-      <div class="fcard"><div class="ic">🖼️</div><h4>スライド貼付用PNG</h4><p>グラフ・制御可否リスト（列選択可）・サマリカードを画像で書き出し。</p></div>
-      <div class="fcard"><div class="ic">🔎</div><h4>概算3シナリオ</h4><p>ベスト／標準／保守の3パターンで幅を提示（概算モード）。</p></div>
-      <div class="fcard"><div class="ic">🗂️</div><h4>案件の保存・検索・比較</h4><p>結果一覧に保存し、検索・2〜3件の横並び比較。</p></div>
-      <div class="fcard"><div class="ic">💾</div><h4>スナップショット / バックアップ</h4><p>入力条件を保存・呼び出し・受け渡し。全体データのバックアップ/復元。</p></div>
-    </div>
-    <p style="font-size:13.5px;color:var(--muted)">
-      出力ファイル名は <code>エクスポート年月日_企業名_種別.拡張子</code>（例：<code>20260710_ゼンケン_提案書.pptx</code>）で自動命名されます。
-    </p>
-  </section>
-
-  <!-- 7. 概算モード -->
-  <section id="gaisan">
-    <div class="kicker"><span class="num">7</span><h2>概算モード（機材情報が無いとき）</h2></div>
-    <p>室外機や機材の情報がまだ無くても、<b>検針票さえあれば概算</b>できます。</p>
-    <ul>
-      <li>「機材情報なし→検針票から概算する」をONにすると、<b>検針票の空調ピーク負荷 ÷ 標準室外機の定格出力</b>から台数を推定し、初期費用・回収まで自動で概算します。</li>
-      <li><b>「概算の前提（この案件用に調整）」</b>で、定格出力・制御比率・材料費/工事費/ハードウェア費を案件ごとに手入力できます（既定はマスタ値）。</li>
-      <li>結果は <b>3シナリオ（ベスト／標準／保守）</b>で幅を提示。提案書には自動で「概算です」の注記と概算の説明ページが入ります。</li>
-    </ul>
-    <div class="warn"><b>概算はあくまで環境を想定した概算です。</b>実機材・実見積が取得できたら、室外機リスト（型番）等を入れて精緻化してください。</div>
-  </section>
-
-  <!-- 8. FAQ -->
-  <section id="faq">
-    <div class="kicker"><span class="num">8</span><h2>困ったとき・注意点</h2></div>
+    <div class="warn"><b>起動できない／不安定：</b>「Starting the CLR failed…」等が出ても一時的です。<b>ターミナルを開き直す</b>か <b>PC再起動</b>で解消します。</div>
     <h3>よくある質問</h3>
     <ul>
-      <li><b>台数や機材費が分からない</b> … 「機材情報なし→検針票から概算する」をON。標準単価で初期費用まで概算されます。</li>
-      <li><b>インポートで「列名が違う」と出る</b> … アプリ内の「インポート用テンプレDL」に合わせてください。検針年月は <code>2025年4月</code>/<code>202504</code> 形式。</li>
-      <li><b>削減レポで「前年」が空になる</b> … 前年（対象年）の月次データが未取込。追加インポートか企業データから両年を揃えてください。</li>
-      <li><b>出力できるもの</b> … 提案書(PPTX)／稟議シート(Excel)／削減実績報告書(PDF・Excel)／見積書・請求書(PDF・Excel)／スライド貼付用PNG。</li>
+      <li><b>台数・機材費が分からない</b> → STEP3の<b>概算モードON</b>。標準単価で初期費用まで自動概算。</li>
+      <li><b>「列名が違う」と出る</b> → STEP1の<b>テンプレDL</b>を使うか、検針年月を <code>2025/04</code>/<code>202504</code> 形式に。</li>
+      <li><b>入力をやり直したくない</b> → メニュー直下の<b>スナップショット</b>で保存→呼び出し。</li>
+      <li><b>設定を変えたのに反映されない</b> → <b>アプリ（Streamlit）を再起動</b>すると確実です。</li>
     </ul>
-    <h3>運用上の注意</h3>
-    <ul>
-      <li>設定・マスタ・保存案件・企業データ・スナップショットは <code>dps_app_data.json</code> に保存されます。<b>定期的にバックアップ</b>（各種設定＞データ管理）を。</li>
-      <li>全体復元は<b>完全上書き</b>です。復元前に必ずバックアップを取得してください。</li>
-      <li>設定を変更した後は、反映確認のため <b>アプリ（Streamlit）を再起動</b>すると確実です。</li>
-    </ul>
+    <p style="font-size:12.5px;color:var(--muted)">※ 図は実画面の配色・並び・名称を忠実に再現したものです（数値は例）。ウィンドウ幅により配置は多少変わります。文章版は同梱 <code>操作マニュアル_本文.md</code> を参照。</p>
   </section>
 
 </div>
-
-<footer>
-  DPS 空調デマンド制御 提案・稟議シミュレーター ／ 本書は導入・利用の概要ガイドです。<br>
-  詳細は同梱の各ドキュメント（操作マニュアル・算出ロジック仕様書・管理者ガイド・営業クイックスタート）をご参照ください。
-</footer>
-
+<footer>DPS 空調デマンド制御 提案・稟議シミュレーター ／ 画面操作マニュアル（実画面準拠・可視化版）</footer>
 </body>
 </html>

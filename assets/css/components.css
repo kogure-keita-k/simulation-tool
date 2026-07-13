@@ -1,0 +1,112 @@
+/* ============================================================
+   components.css ― 再利用する部品
+   ・header（案件ヘッダーカード）/ footer
+   ・button / card / table / form（入力風パーツ）
+   ・badge / callout / annotation / breadcrumb 相当
+   ※ 画面再現図(.screen)を構成する UI 部品もここに集約。
+   ============================================================ */
+
+/* ---- セクション見出し（番号つき）---- */
+.kicker{display:flex;align-items:center;gap:10px;margin:0 0 6px;}
+.kicker .num{min-width:30px;height:30px;padding:0 6px;border-radius:8px;background:var(--navy);color:#fff;
+  font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;}
+
+/* ---- 注意ボックス（note / warn）---- */
+.note{border-left:4px solid var(--teal);background:#f0f7f4;padding:11px 15px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13.5px;}
+.warn{border-left:4px solid var(--amber);background:var(--amber-bg);padding:11px 15px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13.5px;}
+
+/* ============ 画面再現図フレーム（card） ============ */
+.screen{position:relative;border:1px solid #c9d2de;border-radius:10px;overflow:hidden;background:#fff;
+  box-shadow:0 6px 18px rgba(20,40,70,.10);font-size:11px;color:#2b3542;}
+.scr-cap{font-size:11.5px;color:var(--muted);text-align:center;margin:8px 0 0;}
+
+/* ---- sidebar 内の部品（濃紺テーマ）---- */
+.sb-brand{font-size:11px;font-weight:800;color:#fff;}
+.sb-brand small{display:block;font-weight:400;color:var(--sb-sub);font-size:8.5px;}
+.sb-ver{float:right;font-size:8px;color:var(--sb-sub);}
+.sb-lbl{color:var(--sb-sub);font-size:8.5px;margin:9px 0 4px;letter-spacing:.03em;}
+.sb-menu{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.sb-btn{background:#eef1f6;color:#2c3a56;border-radius:5px;font-size:8.5px;font-weight:600;text-align:center;padding:3px 2px;border:1px solid #d5dbe6;}
+.sb-wide{background:#f5f7fb;color:#2c3a56;border-radius:5px;font-size:8.5px;text-align:left;padding:4px 6px;margin-top:6px;border:1px solid #d5dbe6;}
+.sb-h{color:#fff;font-weight:800;font-size:10px;margin:10px 0 4px;border-top:1px solid #2c3a5b;padding-top:7px;}
+.sb-f{color:var(--sb-sub);font-size:8px;margin:5px 0 2px;}
+.sb-inp{background:var(--sb-inp);border:1px solid var(--sb-inpbd);border-radius:5px;color:#dbe3f0;font-size:9px;padding:3px 6px;height:19px;display:flex;align-items:center;}
+.sb-inp.ph{color:#8f9cb5;}
+.sb-sel{background:var(--sb-inp);border:1px solid var(--sb-inpbd);border-radius:5px;color:#dbe3f0;font-size:9px;padding:3px 6px;height:19px;display:flex;align-items:center;justify-content:space-between;}
+.sb-sel::after{content:"▾";color:#8f9cb5;font-size:8px;}
+.sb-note{color:#9fb0c9;font-size:7.5px;margin-top:3px;line-height:1.4;}
+.sb-tgl{display:flex;align-items:center;gap:5px;font-size:9px;color:#dbe3f0;margin:6px 0;}
+.kn{width:22px;height:12px;border-radius:999px;background:#38507f;position:relative;flex:0 0 22px;}
+.kn::after{content:"";position:absolute;top:1px;left:1px;width:10px;height:10px;border-radius:50%;background:#cdd8ea;}
+.sb-tgl.on .kn{background:#3DAE4E;}
+.sb-tgl.on .kn::after{left:auto;right:1px;background:#fff;}
+.sb-run{background:var(--run);color:#fff;border-radius:6px;text-align:center;font-weight:800;font-size:10px;padding:6px;margin-top:11px;}
+
+/* ---- header（案件ヘッダーカード）+ badge ---- */
+.hdr{border:1px solid #E5E7EB;border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(16,24,40,.05);}
+.hdr .sys{font-size:7.5px;color:#9CA3AF;}
+.hdr .cust{font-size:13px;font-weight:800;color:#0F2E5D;line-height:1.2;}
+.hdr .meta{font-size:8px;color:#6B7280;}
+.hdr .R{display:flex;gap:4px;flex-wrap:wrap;}
+.pilb{font-size:7.5px;border-radius:999px;padding:1px 7px;border:1px solid;}
+.b-green{background:#E9F5EE;color:#107C41;border-color:#C4E6D1;}
+.b-amber{background:#FBF3E2;color:#9A6700;border-color:#EFDDB0;}
+.b-navy{background:#EBF1F8;color:#0F2E5D;border-color:#CBD9EE;}
+
+/* ---- expander（折りたたみ）---- */
+.exp{border:1px solid #e6e9ee;border-radius:7px;margin-top:8px;overflow:hidden;}
+.exp-h{background:#f4f6f9;padding:6px 9px;font-size:9.5px;font-weight:700;color:#334;border-bottom:1px solid #e6e9ee;}
+.exp-h::before{content:"▾ ";color:#8a97a4;}
+.exp-h.closed::before{content:"▸ ";}
+.exp-b{padding:8px 9px;}
+
+/* ---- button ---- */
+.btnrow{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;}
+.up{background:var(--blue);color:#fff;border-radius:5px;font-size:9px;font-weight:700;padding:4px 12px;}
+.lt{background:#f3f6f9;color:#334;border:1px solid #cdd6e0;border-radius:5px;font-size:9px;font-weight:600;padding:4px 10px;}
+.dl{background:var(--run);color:#fff;border-radius:6px;font-size:9px;font-weight:700;text-align:center;padding:6px;}
+.dlgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+/* ---- table（検針票/機体の表）---- */
+.dt{width:100%;border-collapse:collapse;font-size:8px;margin-top:5px;}
+.dt th,.dt td{border:1px solid #e0e6ee;padding:2px 4px;text-align:center;color:#3a4653;}
+.dt th{background:#f0f3f8;color:#0F2E5D;font-weight:700;}
+
+/* ---- hint / KPIカード / グラフ ---- */
+.hint{background:#eef5fb;border:1px solid #cfe0f0;border-radius:7px;padding:8px 10px;font-size:9.5px;color:#255081;margin-top:8px;}
+.kpis{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px;}
+.kpi{border:1px solid #e1e8f0;border-radius:8px;padding:8px 9px;background:#fbfdff;}
+.kpi .l{font-size:8px;color:#6a7784;}
+.kpi .v{font-size:16px;font-weight:800;color:#0F2E5D;line-height:1.15;}
+.kpi .d{font-size:8px;color:#1E8E4B;font-weight:700;}
+.subttl{font-size:9.5px;font-weight:800;color:#0F2E5D;margin:9px 0 3px;}
+.bars{display:flex;align-items:flex-end;gap:5px;height:56px;padding:3px 2px 0;}
+.bars .b{flex:1;background:linear-gradient(180deg,#7fb6a6,#0E7C66);border-radius:3px 3px 0 0;}
+.bars .b.n{background:linear-gradient(180deg,#c7d3e2,#93a6bf);}
+
+/* ---- callout（番号バッジ）/ annotation ---- */
+.hot{position:absolute;width:20px;height:20px;border-radius:50%;background:var(--amber);color:#fff;font-weight:800;font-size:11px;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.3);border:2px solid #fff;z-index:6;}
+.anno{list-style:none;margin:0;padding:0;}
+.anno li{display:flex;gap:11px;padding:9px 0;border-bottom:1px dashed var(--line);}
+.anno li:last-child{border-bottom:none;}
+.anno .n{flex:0 0 23px;height:23px;border-radius:50%;background:var(--amber);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;}
+.anno .tx{font-size:13px;}
+.anno .tx b{color:var(--navy);}
+.anno .res{display:block;margin-top:3px;color:var(--teal-d);font-size:12.5px;}
+.anno .res::before{content:"→ ";font-weight:800;}
+
+/* ---- table（早見表）/ pill / 目次 ---- */
+table.ref{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0;}
+table.ref th,table.ref td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;}
+table.ref th{background:var(--soft);color:var(--navy);}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;background:#e9eff7;color:#1F3E6E;}
+.toc{columns:2;column-gap:26px;font-size:13.5px;}
+.toc a{display:block;padding:3px 0;color:var(--ink);text-decoration:none;}
+.toc a:hover{color:var(--teal);}
+
+/* ---- コンポーネントのレスポンシブ ---- */
+@media (max-width:560px){
+  .toc{columns:1;}
+  .kpis,.dlgrid{grid-template-columns:1fr;}
+}

@@ -1,0 +1,34 @@
+/* ============================================================
+   page.css ― ページ固有
+   ・top / simulation / proposal / settings / login / dashboard
+   ※ 本マニュアルは1ページ構成のため、各アプリ画面
+     （simulation=試算 / proposal=出力 / settings=各種設定 / dashboard=結果）は
+     components.css の部品（.screen / .sb* / .exp / .kpi / .bars / .dl …）を
+     組み合わせて再現しています。ここには「その画面だけの見た目」を置きます。
+   ============================================================ */
+
+/* ---------- top（表紙・概要） ---------- */
+.badge-top{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
+  padding:3px 12px;border-radius:999px;font-size:12.5px;margin-bottom:13px;}
+header.hero h1{margin:0 0 8px;font-size:26px;font-weight:800;line-height:1.35;}
+header.hero p{margin:0;color:#d9e7e2;max-width:780px;font-size:14.5px;}
+
+/* 使い方フロー（概要ページのリボン） */
+.flow{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 2px;}
+.flow .node{background:var(--soft);border:1px solid #cfe3db;color:var(--teal-d);font-weight:700;font-size:12px;border-radius:999px;padding:6px 13px;}
+.flow .ar{color:#9aa6b2;font-weight:800;}
+
+/* ---------- simulation（試算画面：STEP1〜4） ----------
+   入力パネル＝ .sb* / 検針票＝ .exp + .dt（components.css）を使用。
+   画面固有の追加スタイルは現状なし。 */
+
+/* ---------- dashboard（結果画面：STEP5） ----------
+   KPI＝ .kpi / .kpis、グラフ＝ .bars（components.css）を使用。
+   画面固有の追加スタイルは現状なし。 */
+
+/* ---------- proposal（出力：STEP6） ----------
+   ダウンロード＝ .dl / .dlgrid（components.css）を使用。
+   画面固有の追加スタイルは現状なし。 */
+
+/* ---------- settings（各種設定） / login ----------
+   早見表＝ table.ref で説明。専用スタイルなし。 */
