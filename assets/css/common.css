@@ -12,6 +12,20 @@ header[data-testid="stHeader"],.st-emotion-cache-10p9htt{
 }
 
 
+/* NumberInput の入力欄 */
+[data-testid="stNumberInput"] input {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+
+/* NumberInput コンテナ */
+[data-testid="stNumberInputContainer"] {
+    border: none !important;
+    box-shadow: none !important;
+}
+
 
 /* 上部の余白も詰める */
 .stAppViewContainer {
