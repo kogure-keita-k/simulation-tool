@@ -7,9 +7,11 @@
    読み込み順：common → layout → components → page
    ============================================================ */
    /* Streamlit 上部ヘッダーを非表示 */
-header[data-testid="stHeader"] {
+header[data-testid="stHeader"],.st-emotion-cache-1csi29a {
     display: none !important;
 }
+
+
 
 /* 上部の余白も詰める */
 .stAppViewContainer {
