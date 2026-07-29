@@ -7,7 +7,7 @@
    読み込み順：common → layout → components → page
    ============================================================ */
    /* Streamlit 上部ヘッダーを非表示 */
-header[data-testid="stHeader"],.st-emotion-cache-1csi29a {
+header[data-testid="stHeader"],.st-emotion-cache-10p9htt{
     display: none !important;
 }
 
@@ -141,6 +141,10 @@ pre .c {
     section[data-testid="stSidebar"] * { 
       font-size: 14px;
      }
+section[data-testid="stSidebar"]{
+  padding-top: 20px;
+}
+
     section[data-testid="stSidebar"] input,
     section[data-testid="stSidebar"] select { background: #243360 !important; color: #fff !important; }
 
