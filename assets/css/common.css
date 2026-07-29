@@ -137,7 +137,6 @@ pre .c {
     /* サイドバー */
     section[data-testid="stSidebar"] { background: #1A2744; }
     section[data-testid="stSidebar"] * { 
-      color: #ECEFF4 !important;
       font-size: 14px;
      }
     section[data-testid="stSidebar"] input,
@@ -248,4 +247,26 @@ pre .c {
     .stAlert { border-radius: 8px; }
     /* ヘッダー */
     h1 { color: #1F3864; }
-    h2, h3 { color: #2F5496; border-bottom: 2px solid #E0E8F8; padding-bottom: 4px; }
+    h2, h3 { color: #2F5496; border-bottom: 1px solid #E0E8F8; padding-bottom: 4px; }
+
+
+
+
+
+
+.st-emotion-cache-reh4vn {
+    display: flex;
+    flex-flow: row;
+    -webkit-box-align: center;
+    align-items: center;
+    height: 2.5rem;
+   border-width:inherit !important; 
+     border-style:inherit !important; 
+    border-color:inherit !important; 
+    background-color:inherit !important; 
+    transition-duration: 200ms;
+    transition-property: border;
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}

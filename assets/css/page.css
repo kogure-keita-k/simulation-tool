@@ -8,6 +8,9 @@
      組み合わせて再現しています。ここには「その画面だけの見た目」を置きます。
    ============================================================ */
 /* ---------- top（表紙・概要） ---------- */
+.st-emotion-cache-467cry{
+  margin-bottom: 0 !important;
+}
 .badge-top {
   display: inline-block;
   background: rgba(255, 255, 255, .16);
