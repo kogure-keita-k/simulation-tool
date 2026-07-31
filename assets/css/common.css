@@ -25,6 +25,10 @@ header[data-testid="stHeader"],.st-emotion-cache-10p9htt{
     border: none !important;
     box-shadow: none !important;
 }
+/* ---サイドナビ--- */
+.st-emotion-cache-1d0j37u font{
+        display: none !important;
+}
 
 
 /* 上部の余白も詰める */
