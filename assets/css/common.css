@@ -294,3 +294,9 @@ section[data-testid="stSidebar"]{
     border-radius: 0.5rem;
     overflow: hidden;
 }
+
+section[data-testid="stSidebar"] [data-baseweb="input"], section[data-testid="stSidebar"] [data-baseweb="base-input"], section[data-testid="stSidebar"] [data-baseweb="textarea"], section[data-testid="stSidebar"] [data-baseweb="select"] > div, section[data-testid="stSidebar"] [data-testid="stNumberInput"] > div, section[data-testid="stSidebar"] [data-testid="stNumberInputContainer"] {
+    background-color:none !important;
+    border:none !important;
+    color: #fff !important;
+}
