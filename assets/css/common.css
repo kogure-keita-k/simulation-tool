@@ -167,16 +167,7 @@ section[data-testid="stSidebar"]{
     section[data-testid="stSidebar"] select { background: #243360 !important; color: #fff !important; }
 
     /* 🎨 サイドバー入力：白背景の項目を濃紺(#243360)・白文字・白枠に統一 */
-    section[data-testid="stSidebar"] [data-baseweb="input"],
-    section[data-testid="stSidebar"] [data-baseweb="base-input"],
-    section[data-testid="stSidebar"] [data-baseweb="textarea"],
-    section[data-testid="stSidebar"] [data-baseweb="select"] > div,
-    section[data-testid="stSidebar"] [data-testid="stNumberInput"] > div,
-    section[data-testid="stSidebar"] [data-testid="stNumberInputContainer"] {
-        background-color: #243360 !important;
-        border: 1px solid #FFFFFF !important;
-        color: #fff !important;
-    }
+   
     section[data-testid="stSidebar"] [data-baseweb="input"] input,
     section[data-testid="stSidebar"] [data-baseweb="select"] div,
     section[data-testid="stSidebar"] textarea {
@@ -189,7 +180,7 @@ section[data-testid="stSidebar"]{
     section[data-testid="stSidebar"] [data-testid="stNumberInputStepDown"] {
         background-color: #243360 !important;
         color: #fff !important;
-        border-left: 1px solid #FFFFFF !important;
+       border-left: solid 1px #5870a4 !important;
     }
     section[data-testid="stSidebar"] [data-testid="stNumberInput"] button:hover,
     section[data-testid="stSidebar"] [data-testid="stNumberInputStepUp"]:hover,
@@ -303,12 +294,16 @@ section[data-testid="stSidebar"] [data-baseweb="input"], section[data-testid="st
   margin-bottom:20px !important;
   padding-bottom:10px !important;
 }
-div[data-testid="stNumberInputContainer"] {
-  border:solid 1px #ccc !important;
-}
-
 
 
 .st-emotion-cache-e1adlt{
    border:solid 1px #ccc !important;
+}
+.st-emotion-cache-19cfm8f{
+  height: inherit !important;
+}
+
+
+section[data-testid="stSidebar"] [data-testid="stExpander"] details,div[data-testid="stNumberInputContainer"],div[data-testid="stNumberInputContainer"],.stSidebar select,.stSidebar input{
+    border: solid 1px #5870a4 !important;
 }
