@@ -305,3 +305,7 @@ section[data-testid="stSidebar"] [data-baseweb="input"], section[data-testid="st
 div[data-testid="stNumberInputContainer"] {
   border:solid 1px #ccc !important;
 }
+
+section[data-testid="stSidebar"] [data-testid="stNumberInput"] > div{
+  border:none !important;
+}
