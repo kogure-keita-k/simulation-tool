@@ -295,8 +295,14 @@ section[data-testid="stSidebar"]{
     overflow: hidden;
 }
 
-section[data-testid="stSidebar"] [data-baseweb="input"], section[data-testid="stSidebar"] [data-baseweb="base-input"], section[data-testid="stSidebar"] [data-baseweb="textarea"], section[data-testid="stSidebar"] [data-baseweb="select"] > div, section[data-testid="stSidebar"] [data-testid="stNumberInput"] > div, section[data-testid="stSidebar"] [data-testid="stNumberInputContainer"] {
-    background-color:none !important;
+section[data-testid="stSidebar"] [data-baseweb="input"], section[data-testid="stSidebar"] [data-baseweb="base-input"], section[data-testid="stSidebar"] [data-baseweb="textarea"], section[data-testid="stSidebar"] [data-baseweb="select"] > div{
+    background:none !important;
     border:none !important;
     color: #fff !important;
+}
+.st-emotion-cache-mdg660 h3{
+  margin-bottom:20px !important;
+}
+div[data-testid="stNumberInputContainer"] {
+  border:solid 1px #ccc !important;
 }
