@@ -301,11 +301,14 @@ section[data-testid="stSidebar"] [data-baseweb="input"], section[data-testid="st
 }
 .st-emotion-cache-mdg660 h3,.st-emotion-cache-u1kubd h3{
   margin-bottom:20px !important;
+  padding-bottom:10px !important;
 }
 div[data-testid="stNumberInputContainer"] {
   border:solid 1px #ccc !important;
 }
 
-section[data-testid="stSidebar"] [data-testid="stNumberInput"] > div{
-  border:none !important;
+
+
+.st-emotion-cache-e1adlt{
+   border:solid 1px #ccc !important;
 }
