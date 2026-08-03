@@ -17,8 +17,6 @@ import io
 import datetime
 import os
 import copy
-from pathlib import Path
-
 
 
 def read_css_file(filename: str) -> str:
@@ -40,6 +38,7 @@ def load_css():
         css += read_css_file(file) + "\n"
 
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
 
 # openpyxl のインポート（Excel全12シート完全対応）
 try:
@@ -82,7 +81,7 @@ APP_TITLE = "DPS 空調デマンド制御　提案・稟議シミュレーター
 #   ・マイナー(x.Y.0)＝中くらいの改修：算出方法の修正、実装済み機能・システムの修正
 #   ・パッチ(x.y.Z)＝軽微な改修：ビジュアル・文言など見た目の修正
 #   ※出力資料(PPTX等)関連は「機能追加」以外はすべて軽微(パッチ)扱いとする
-APP_VERSION = "v1.11.4"
+APP_VERSION = "v1.13.7"
 CO2_FACTOR = 0.451          # kg-CO2/kWh
 SUGI_KG    = 8.8            # 杉1本年間CO2吸収kg
 DEFAULT_SYSTEM_FEE = 241800 # システム利用料（固定調整枠）円/年
@@ -357,6 +356,93 @@ def _num0(v, default=0.0):
     except (TypeError, ValueError):
         return default
     return default if f != f else f   # f != f は NaN 判定
+
+
+def check_month_regression(labels):
+    """年月ラベル列を先頭から順に見て『前戻り（返り）』または『同一年月の重複』を検出する。
+    年月は前に戻らない前提。12月→1月 の暦ロールオーバーは正常として許容。
+    戻り値：問題箇所のリスト [(index(0始まり), 直前ラベル, 該当ラベル, 理由)]。異常なしなら []。"""
+    import re
+
+    def _parse(s):
+        s = str(s).strip()
+        m4 = re.search(r"(\d{4})\D{0,3}(\d{1,2})", s)   # 2025/04・2025年4月・2025-4・202504
+        if m4:
+            y, mo = int(m4.group(1)), int(m4.group(2))
+            if 1 <= mo <= 12:
+                return y, mo
+        m1 = re.search(r"(\d{1,2})", s)                 # 月のみ（4月・4・04）
+        if m1:
+            mo = int(m1.group(1))
+            if 1 <= mo <= 12:
+                return None, mo
+        return None, None
+
+    issues, prev_y, prev_m, prev_lab = [], None, None, ""
+    for i, lab in enumerate(labels):
+        y, mo = _parse(lab)
+        if mo is None:
+            continue                                    # 解釈不能はスキップ
+        if prev_m is not None:
+            back, reason = False, ""
+            if y is not None and prev_y is not None:    # 双方に明示年 → 絶対月で比較
+                if y * 12 + mo < prev_y * 12 + prev_m:
+                    back, reason = True, "年月が前に戻っています"
+                elif y * 12 + mo == prev_y * 12 + prev_m:
+                    back, reason = True, "同じ年月が重複しています"
+            else:                                       # 月番号で比較（12→1 のみ許容）
+                if mo < prev_m and not (prev_m == 12 and mo == 1):
+                    back, reason = True, "月が前に戻っています"
+                elif mo == prev_m:
+                    back, reason = True, "同じ月が重複しています"
+            if back:
+                issues.append((i, prev_lab, lab, reason))
+        prev_m = mo
+        if y is not None:
+            prev_y = y
+        prev_lab = lab
+    return issues
+
+
+def resequence_months(labels, n=None):
+    """先頭の解釈可能な年月を起点に、連番の年月ラベル列を生成する（先頭の表記スタイルを踏襲）。
+    例：先頭が『2025年5月』→ 2025年5月/2025年6月/…/2025年12月/2026年1月/… と12ヶ月。
+    12月→翌1月は年を繰り上げる。先頭が解釈不能なら None（＝呼び出し側は元のまま）。"""
+    import re
+    labels = list(labels)
+    n = len(labels) if n is None else n
+    if n <= 0:
+        return None
+    y0 = m0 = style = None
+    for lab in labels:
+        s = str(lab).strip()
+        m4 = re.search(r"(\d{4})\D{0,3}(\d{1,2})", s)   # 2025/05・2025年5月・2025-5・202505・2025-05-01…
+        if m4 and 1 <= int(m4.group(2)) <= 12:
+            y0, m0 = int(m4.group(1)), int(m4.group(2))
+            style = "ymd_jp" if "年" in s else ("slash" if ("/" in s or "-" in s) else "num")
+            break
+        m1 = re.search(r"(\d{1,2})", s)                 # 月のみ（5月・5・05）
+        if m1 and 1 <= int(m1.group(1)) <= 12:
+            m0, style, y0 = int(m1.group(1)), "month", None
+            break
+    if m0 is None:
+        return None
+    out, y, m = [], y0, m0
+    for _ in range(n):
+        if style == "ymd_jp":
+            out.append(f"{y}年{m}月")
+        elif style == "slash":
+            out.append(f"{y}/{m:02d}")
+        elif style == "num":
+            out.append(f"{y}{m:02d}")
+        else:
+            out.append(f"{m}月")                        # 年なし（先頭が月のみ）
+        m += 1
+        if m > 12:
+            m = 1
+            if y is not None:
+                y += 1
+    return out
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -653,9 +739,14 @@ def sanitize_columns(df: pd.DataFrame) -> pd.DataFrame:
         "電力量単価": [FB_DEFAULTS["電力量単価"]] * 12,
     }
     
+    _nrow = len(df)
     for col, default_val in required_defaults.items():
         if col not in df.columns:
-            df[col] = default_val
+            # 既定値は行数に合わせる（取込表が12行以外でも長さ不一致で落ちないように）
+            if col == "月":
+                df[col] = [f"2025/{(i % 12) + 1:02d}" for i in range(_nrow)]
+            else:
+                df[col] = default_val[0]   # スカラー＝全行へ自動展開（行数に非依存）
         else:
             if col != "月":
                 df[col] = pd.to_numeric(df[col].astype(str).str.replace(",", "").str.extract(r'([0-9\.]+)')[0], errors='coerce')
@@ -928,20 +1019,29 @@ def estimate_capacity_kw(model):
 
 
 def _unit_col(col):
+    """室外機リストの見出し（タイトル）から標準カラムへ対応づける。列の位置には依存せず、
+    呼び名のゆれ（機種・製造元・発停可否…）にも幅広く対応。該当なしは None。"""
     c = str(col).strip().replace("\n", "").replace(" ", "").replace("　", "").lower()
     if not c or c.startswith("unnamed") or c == "nan":
         return None
-    if "型番" in c or "型式" in c or "品番" in c or "model" in c:
+    # 型番・型式（機種・品番・形式など）
+    if any(k in c for k in ("型番", "型式", "品番", "機種", "形式", "品名", "model")):
         return "型番"
-    if "メーカ" in c or "maker" in c or "brand" in c:
+    # メーカー（製造元・ブランドなど）
+    if any(k in c for k in ("メーカ", "製造元", "製造者", "製造会社", "ブランド", "maker", "brand", "manufact")):
         return "メーカー"
-    if "定格" in c or "能力" in c or "冷房" in c or "capacity" in c:
+    # 定格冷房能力kW（能力・冷房・出力・容量など。kWhは除外）
+    if any(k in c for k in ("定格", "能力", "冷房", "容量", "出力", "capacity")):
         return "定格冷房kW"
-    if "稼働" in c or "負荷率" in c or "duty" in c or "運転率" in c:
+    # 稼働係数（負荷率・運転率・係数など）
+    if any(k in c for k in ("稼働", "負荷率", "運転率", "係数", "duty", "load")):
         return "稼働係数"
-    if "制御" in c or "control" in c or ("対象" in c and "率" not in c):
+    # 制御可否（発停・可否・オンオフ・対象など）
+    if any(k in c for k in ("制御", "発停", "可否", "control", "onoff", "on/off")) or ("対象" in c and "率" not in c):
         return "制御可否"
-    if "機器" in c or "番号" in c or "場所" in c or "名称" in c or c == "id" or c == "no":
+    # 機器ID / 系統 / 設置場所 / 名称 / 番号 など（識別・位置系）
+    if any(k in c for k in ("機器", "系統", "設置", "場所", "位置", "エリア", "号機", "名称", "番号", "ラベル")) \
+            or c in ("id", "no", "no.", "#"):
         return "機器ID"
     return None
 
@@ -1231,6 +1331,27 @@ def calc_simulation(df: pd.DataFrame, app_data: dict,
         b = float(row.get("再エネ賦課金", 0.0)) if ren_included else 0.0
         return a + b
 
+    # ─── 時間帯別単価(TOU)：★追加専用★。既定OFF。OFF、または対象月に時間帯別単価が
+    #     無い場合は必ず従来の「電力量単価」に一致するため、既存の算出結果は不変。 ───
+    tou_on     = bool(opts.get("tou_enabled", False))
+    tou_policy = str(opts.get("tou_policy", "average"))   # average(中立) / peak(上振れ) / conservative(控えめ)
+    _TOU_COLS  = ["夏季ピーク単価", "平日昼間単価", "夜間休日単価"]
+
+    def _tou_base(row):
+        """削減kWhを評価する基準単価。OFF/バンド単価なしの月は従来の電力量単価を返す（＝不変）。"""
+        base = float(row["電力量単価"])
+        if not tou_on:
+            return base
+        vals = [_num0(row.get(c)) for c in _TOU_COLS]
+        vals = [v for v in vals if v > 0]
+        if not vals:
+            return base                       # その月に時間帯別単価が無い → 従来どおり
+        if tou_policy == "peak":
+            return max(vals)                  # 最高バンド（上振れ）
+        if tou_policy == "conservative":
+            return min(vals)                  # 最低バンド（控えめ）
+        return sum(vals) / len(vals)          # 平均（中立・既定）
+
     # ─── ① 電力量料金IFシミュレーション（conv=0.5 適用） ──────────────
     ac_kwh_list   = []
     reduc_kwh_list = []
@@ -1243,7 +1364,8 @@ def calc_simulation(df: pd.DataFrame, app_data: dict,
         else:
             ac_kwh_m = usage_m * ac_kwh_r                 # 業態の空調割合（従来）
         reduc_kwh_m = round(ac_kwh_m * ctrl_ratio * cap_rate * CONV_FACTOR)
-        eff_rate_m  = row["電力量単価"] + _row_add(row)    # 従量単価＋（燃調・再エネ：列があれば月別）
+        # 削減分の評価単価：TOU-OFF/バンドなしの月は _tou_base が電力量単価を返すため従来と一致
+        eff_rate_m  = _tou_base(row) + _row_add(row)      # 従量単価（TOU時はバンド単価）＋（燃調・再エネ）
         ene_saving_m = reduc_kwh_m * eff_rate_m
 
         ac_kwh_list.append(ac_kwh_m)
@@ -1320,11 +1442,16 @@ def calc_simulation(df: pd.DataFrame, app_data: dict,
         pf_adj = 1.0 - (pf - pf_base)
         pf_adj = max(1.0 - pf_cap, min(pf_adj, 1.0 + pf_cap))
         
-        _eff = row["電力量単価"] + _row_add(row)
+        _eff = row["電力量単価"] + _row_add(row)          # 現状料金は総使用量なので従来の（月平均）単価で評価
         bill = (old_contract * row["基本料金単価"] * pf_adj
                 + row["使用量合計"] * _eff)
-        bill_after = (new_contract * row["基本料金単価"] * pf_adj
-                      + (row["使用量合計"] - reduc_kwh_list[idx]) * _eff)
+        if tou_on:
+            # TOU時は「現状料金 − 基本料金削減 − 電力量削減」で導出し、料金比較と削減額を常に一致させる
+            bill_after = bill - dm_saving_list[idx] - ene_saving_list[idx]
+        else:
+            # 従来式（TOU-OFF時はこの分岐＝既存の算出と完全一致）
+            bill_after = (new_contract * row["基本料金単価"] * pf_adj
+                          + (row["使用量合計"] - reduc_kwh_list[idx]) * _eff)
         bill_list.append(bill)
         bill_after_list.append(bill_after)
 
@@ -1362,6 +1489,8 @@ def calc_simulation(df: pd.DataFrame, app_data: dict,
         "pf_cap": pf_cap,                         # 力率割引の上下限
         "fuel_included": fuel_included,           # 燃料費調整額を反映したか
         "ren_included": ren_included,             # 再エネ賦課金を反映したか
+        "tou_enabled": tou_on,                    # 時間帯別単価(TOU)を反映したか
+        "tou_policy": tou_policy,                 # TOUの配分ポリシー（average/peak/conservative）
         "ac_peak_r": ac_peak_r,
         "ene_saving_annual": ene_saving_annual,
         "dm_saving_annual": dm_saving_annual,
@@ -1436,6 +1565,10 @@ def provisional_notes(res: dict, app_data: dict) -> list:
                 notes.append("不足していた重要データを既定値で自動補完しています（要確認）。")
         except Exception:
             pass
+        if res.get("tou_enabled"):
+            _pol = {"average": "平均採用（中立）", "peak": "ピーク採用",
+                    "conservative": "保守採用（控えめ）"}.get(res.get("tou_policy", "average"), "平均採用（中立）")
+            notes.append(f"時間帯別単価(TOU)を反映：時間帯別単価が記載された月のみ、削減分を『{_pol}』で評価（他月は月平均単価）。")
     except Exception:
         pass
     return notes
@@ -2669,6 +2802,19 @@ def build_excel(res: dict, client_name: str, app_data: dict) -> bytes:
     to = tempfile.NamedTemporaryFile(suffix="_out.xlsx", delete=False); to.close(); _os.unlink(to.name)
     wbin.save(ti.name)
     _bw.build(ti.name, to.name)
+    # TOU反映時：前提シートの空き行へ注記を1行追記（数式には触れない）
+    if res.get("tou_enabled"):
+        try:
+            from openpyxl import load_workbook as _lw
+            _wo = _lw(to.name)
+            _ws = _wo["前提・制御条件"] if "前提・制御条件" in _wo.sheetnames else _wo.active
+            _pol = {"average": "平均採用(中立)", "peak": "ピーク採用",
+                    "conservative": "保守採用(控えめ)"}.get(res.get("tou_policy", "average"), "平均採用(中立)")
+            _ws.cell(row=_ws.max_row + 2, column=1,
+                     value=f"※ 時間帯別単価(TOU)を反映：時間帯別単価が記載された月のみ削減分を『{_pol}』で評価（他月は月平均単価）。")
+            _wo.save(to.name)
+        except Exception:
+            pass
     with open(to.name, "rb") as fh:
         data = fh.read()
     for p in (ti.name, to.name):
@@ -2951,9 +3097,25 @@ def _adm_month_label(v):
         return str(v)
 
 
+def _is_month_cell(v):
+    """月セル判定：datetime、または『2025/04・2025年4月・2025-04・202504』等の年月文字列。"""
+    if _adm_is_dt(v):
+        return True
+    if v is None or isinstance(v, bool):
+        return False
+    import re
+    s = str(v).strip()
+    if not s:
+        return False
+    if re.fullmatch(r"20\d{2}(0[1-9]|1[0-2])", s):                          # 202504
+        return True
+    return bool(re.search(r"20\d{2}\s*[/\-年\.]\s*(0?[1-9]|1[0-2])(?!\d)", s))  # 2025/04・2025年4月
+
+
 def admin_import_input_graph(uploaded):
-    """『入力』シート（横並びグリッド）／フラット形式から ①グラフ用の
-    DataFrame(月,使用量,削減,最大デマンド) を返す。読めなければ None。"""
+    """効果試算Excel（『計算』/『入力』シート＝横並びグリッド）と DPSテンプレ（フラット表）の
+    どちらからでも ①グラフ用 DataFrame(月,使用量,削減,最大デマンド) を返す。読めなければ None。
+    ※ シートは『計算』優先→『入力』→その他。月セルは日付・文字列（2025/04 等）どちらも認識。"""
     from collections import Counter
     try:
         uploaded.seek(0)
@@ -2962,8 +3124,19 @@ def admin_import_input_graph(uploaded):
         return None
 
     def _pick(names):
-        cands = [s for s in names if ("入力" in s) and not any(k in s for k in ("室外機", "機器", "利用", "機体"))]
-        return cands or list(names)
+        _ng = ("室外機", "機器", "機体", "利用", "顧客", "使い方", "変更", "ロジック", "履歴")
+        keisan = [s for s in names if "計算" in s and not any(k in s for k in _ng)]
+        nyu = [s for s in names if "入力" in s and not any(k in s for k in _ng)]
+        other = [s for s in names if not any(k in s for k in _ng) and s not in keisan and s not in nyu]
+        return (keisan + nyu + other) or list(names)
+
+    def _num(v):
+        try:
+            if v is None or (isinstance(v, float) and pd.isna(v)):
+                return 0.0
+            return float(v)
+        except Exception:
+            return 0.0
 
     for sn in _pick(xls.sheet_names):
         try:
@@ -2971,25 +3144,17 @@ def admin_import_input_graph(uploaded):
         except Exception:
             continue
         nr, nc = raw.shape
-        dt_cells = [(r, c, raw.iat[r, c]) for r in range(nr) for c in range(nc) if _adm_is_dt(raw.iat[r, c])]
-        if len(dt_cells) < 6:
+        mcells = [(r, c) for r in range(nr) for c in range(nc) if _is_month_cell(raw.iat[r, c])]
+        if len(mcells) < 6:
             continue
-        rowc = Counter(r for r, _, _ in dt_cells)
-        colc = Counter(c for _, c, _ in dt_cells)
+        rowc = Counter(r for r, _ in mcells)
+        colc = Counter(c for _, c in mcells)
         best_row, row_n = rowc.most_common(1)[0]
-        _, col_n = colc.most_common(1)[0]
-
-        def _num(v):
-            try:
-                if v is None or (isinstance(v, float) and pd.isna(v)):
-                    return 0.0
-                return float(v)
-            except Exception:
-                return 0.0
+        best_col, col_n = colc.most_common(1)[0]
 
         if row_n >= col_n and row_n >= 6:
-            # 横並び（ゼンケン『入力』型）：月＝best_row の日付列
-            month_cols = sorted(c for r, c, _ in dt_cells if r == best_row)
+            # 横並びグリッド（効果試算『計算』/『入力』）：月＝best_row の月セル列
+            month_cols = sorted(c for r, c in mcells if r == best_row)
             months = [_adm_month_label(raw.iat[best_row, c]) for c in month_cols]
 
             def _find_row(keys, avoid=()):
@@ -2999,15 +3164,16 @@ def admin_import_input_graph(uploaded):
                         return r
                 return None
 
-            r_use = _find_row(("使用量合計", "使用量"), avoid=("夏季", "平日", "夜間", "内訳"))
-            r_dm = _find_row(("最大需要", "最大デマンド", "デマンド"))
+            r_use = _find_row(("使用量合計", "使用量"), avoid=("夏季", "平日", "夜間", "内訳", "割合", "推計"))
+            r_dm = _find_row(("最大需要", "最大デマンド", "デマンド"), avoid=("予測", "推計", "削減"))
+            r_red = _find_row(("削減量",), avoid=("(kW)", "（kW）", "割合", "率", "デマンド"))
             usage = [_num(raw.iat[r_use, c]) if r_use is not None else 0.0 for c in month_cols]
             demand = [_num(raw.iat[r_dm, c]) if r_dm is not None else 0.0 for c in month_cols]
-            return pd.DataFrame({"月": months, "使用量": usage, "削減": [0] * len(months), "最大デマンド": demand})
+            reduc = [_num(raw.iat[r_red, c]) if r_red is not None else 0.0 for c in month_cols]
+            return pd.DataFrame({"月": months, "使用量": usage, "削減": reduc, "最大デマンド": demand})
         else:
-            # 縦並び（フラット表）：月＝best_col の日付行、直上をヘッダとみなす
-            best_col = colc.most_common(1)[0][0]
-            month_rows = sorted(r for r, c, _ in dt_cells if c == best_col)
+            # フラット表（DPSテンプレ等）：月＝best_col、その直上をヘッダとみなす
+            month_rows = sorted(r for r, c in mcells if c == best_col)
             header_row = max(min(month_rows) - 1, 0)
 
             def _find_col(keys, avoid=()):
@@ -3019,12 +3185,14 @@ def admin_import_input_graph(uploaded):
 
             c_use = _find_col(("使用量合計", "使用量"), avoid=("夏季", "平日", "夜間"))
             c_dm = _find_col(("最大需要", "最大デマンド", "デマンド"))
-            months, usage, demand = [], [], []
+            c_red = _find_col(("削減",), avoid=("率", "割合"))
+            months, usage, demand, reduc = [], [], [], []
             for r in month_rows:
                 months.append(_adm_month_label(raw.iat[r, best_col]))
                 usage.append(_num(raw.iat[r, c_use]) if c_use is not None else 0.0)
                 demand.append(_num(raw.iat[r, c_dm]) if c_dm is not None else 0.0)
-            return pd.DataFrame({"月": months, "使用量": usage, "削減": [0] * len(months), "最大デマンド": demand})
+                reduc.append(_num(raw.iat[r, c_red]) if c_red is not None else 0.0)
+            return pd.DataFrame({"月": months, "使用量": usage, "削減": reduc, "最大デマンド": demand})
     return None
 
 
@@ -3047,15 +3215,20 @@ def admin_import_units_list(uploaded):
         except Exception:
             continue
         nr, nc = raw.shape
+        # 見出し行の検出（呼び名のゆれを広く許容）
+        _HDR_KEYS = ("系統", "設置", "場所", "メーカ", "製造", "型式", "型番", "機種",
+                     "形式", "制御", "発停", "可否", "機器", "号機")
         hdr = None
         for r in range(min(nr, 25)):
             joined = " ".join(str(raw.iat[r, c]) for c in range(nc) if raw.iat[r, c] is not None)
-            if sum(k in joined for k in ("系統", "設置場所", "メーカー", "型式", "型番", "制御")) >= 2:
+            if sum(k in joined for k in _HDR_KEYS) >= 2:
                 hdr = r
                 break
         if hdr is None:
             continue
-        labs = [str(raw.iat[hdr, c]) if raw.iat[hdr, c] is not None else "" for c in range(nc)]
+        # 見出しは空白（半角/全角）を除去して照合＝タイトル名で引用（列の位置には依存しない）
+        labs = [str(raw.iat[hdr, c] if raw.iat[hdr, c] is not None else "").replace(" ", "").replace("　", "")
+                for c in range(nc)]
 
         def _col(keys, avoid=()):
             for c, l in enumerate(labs):
@@ -3063,11 +3236,12 @@ def admin_import_units_list(uploaded):
                     return c
             return None
 
-        c_sys = _col(("系統", "機器ID", "機器", "場所"), avoid=("設置場所",))
-        c_loc = _col(("設置場所",))
-        c_mfr = _col(("メーカー",))
-        c_mdl = _col(("型式", "型番"))
-        c_ctrl = _col(("制御",))
+        # タイトル（見出し名）で列を特定。メーカー＝製造元/ブランド、型式＝機種/形式、制御可否＝発停/可否…等も許容。
+        c_sys = _col(("系統", "機器ID", "機器", "名称", "号機", "ラベル", "場所"), avoid=("設置場所",))
+        c_loc = _col(("設置場所", "設置", "位置", "エリア", "階"))
+        c_mfr = _col(("メーカ", "製造元", "製造者", "製造会社", "ブランド"))
+        c_mdl = _col(("型式", "型番", "機種", "形式", "品番"))
+        c_ctrl = _col(("制御", "発停", "可否"))
         rows = []
         for r in range(hdr + 1, nr):
             def _g(c):
@@ -3547,6 +3721,10 @@ def show_admin(app_data: dict) -> None:
                 st.caption("添付の試算Excel（入力／室外機情報シート）をアップロードすると、①グラフ値・②制御可否リストへ自動で反映します。"
                            "※Excelは形式の一例。実際にアップロードした内容のみ取り込みます（横並び・フラットどちらの表でも可）。")
                 _up = st.file_uploader("試算Excel（.xlsx）をアップロード", type=["xlsx"], key="adm_img_upload")
+                st.session_state.setdefault("opt_month_autoseq", True)
+                st.toggle("年月を先頭月から自動連番にする（取込時）", key="opt_month_autoseq",
+                          help="ON（基本）：最初の年月を起点に以降を自動で連番に整えて取り込みます。"
+                               "OFF：取込値の年月をそのまま使います。")
                 _ic = st.columns(3)
                 _do_imp_g = _ic[0].button("① 「入力」→ グラフに取込", key="adm_imp_g", use_container_width=True,
                                           disabled=(_up is None))
@@ -3559,9 +3737,20 @@ def show_admin(app_data: dict) -> None:
                     if _do_imp_g or _do_imp_both:
                         _gdf = admin_import_input_graph(_up)
                         if _gdf is not None and len(_gdf):
+                            _reg_g = check_month_regression(list(_gdf.get("月", [])))  # 補正前の元データを判定
+                            _autoseq_g = bool(st.session_state.get("opt_month_autoseq", True))
+                            if _autoseq_g:
+                                _seq = resequence_months(list(_gdf.get("月", [])))
+                                if _seq:
+                                    _gdf = _gdf.copy()
+                                    _gdf["月"] = _seq
                             st.session_state["_adm_g_data"] = _gdf
                             st.session_state.pop("adm_g_editor", None)
-                            _msgs.append(f"① グラフ：{len(_gdf)}ヶ月分を取込")
+                            # 取込元データの返りをフラグ保存（①エディタ横に恒久表示するため）
+                            st.session_state["_adm_g_import_reg"] = ({"reg": _reg_g, "autoseq": _autoseq_g} if _reg_g else None)
+                            _msgs.append(f"① グラフ：{len(_gdf)}ヶ月分を取込"
+                                         + ("（年月の返りを検出→自動連番に補正）" if _reg_g and _autoseq_g
+                                            else ("（⚠️年月の返りあり・要確認）" if _reg_g else "")))
                         else:
                             _msgs.append("① グラフ：「入力」シートから月次データを読めませんでした")
                     if _do_imp_l or _do_imp_both:
@@ -3592,6 +3781,20 @@ def show_admin(app_data: dict) -> None:
                     "削減": st.column_config.NumberColumn("削減(kWh)", format="%d"),
                     "最大デマンド": st.column_config.NumberColumn("最大デマンド(kW)", format="%d"),
                 })
+            # 年月の返り（前戻り）チェック：グラフの横軸が不正になるため警告
+            _mreg_g = check_month_regression([r.get("月", "") for r in _g_edit.to_dict("records")])
+            if _mreg_g:
+                _dg = "／".join(f"{_i + 1}行目「{_cur}」（{_why}）" for _i, _prev, _cur, _why in _mreg_g)
+                st.error(f"⚠️ 注意！！！ 年月の返り／重複があります：{_dg}。"
+                         "年月は前に戻らない前提です（12月→1月の年跨ぎは正常）。『月』の記入をご確認ください"
+                         "──このままだとグラフの横軸が不正確になります。")
+            # 取込元データに返りがあった場合の通知（自動連番で補正済みでも明示）
+            _gimp = st.session_state.get("_adm_g_import_reg")
+            if _gimp and _gimp.get("reg") and _gimp.get("autoseq") and not _mreg_g:
+                _gd = "／".join(f"{_i + 1}番目「{_c}」（{_w}）" for _i, _p, _c, _w in _gimp["reg"])
+                st.warning(f"⚠️ 取込データに年月の返り／重複がありました：{_gd}。"
+                           "『自動連番』ONのため先頭月から連番に自動補正しています"
+                           "（原本のまま使うには『年月を先頭月から自動連番にする』をOFFにして再取込）。")
             st.session_state.setdefault("adm_target_units", 0)
             _tu = st.number_input("制御台数（グラフのラベル／制御可否リストの制御台数に使用）",
                                   min_value=0, max_value=100000, step=1, key="adm_target_units")
@@ -3642,8 +3845,16 @@ def show_admin(app_data: dict) -> None:
                     _reduc = [float(r.get("削減", 0) or 0) for r in _rows]
                     _demand = [float(r.get("最大デマンド", 0) or 0) for r in _rows]
                     _cu = int(_tu) if int(_tu) > 0 else 0
+                    # グラフタイトル：施設全体の電力推移（初月〜最終月）と対象設備
+                    import re as _re
+                    def _ym_jp(s):
+                        m = _re.search(r"(\d{4})\D{0,3}(\d{1,2})", str(s))
+                        return f"{int(m.group(1))}年{int(m.group(2))}月" if m else ""
+                    _ym_list = [y for y in (_ym_jp(m) for m in _months) if y]
+                    _period = f"（{_ym_list[0]}～{_ym_list[-1]}）" if _ym_list else ""
+                    _chart_title = f"施設全体の電力推移{_period}と対象設備"
                     st.session_state["_adm_img_chart"] = make_demand_chart_png(
-                        _months, _usage, _reduc, _demand, target_units=_cu)
+                        _months, _usage, _reduc, _demand, target_units=_cu, title=_chart_title)
                     st.success("① グラフを生成しました。")
                 except Exception as e:
                     st.error(f"① グラフ生成でエラー: {e}")
@@ -4136,7 +4347,13 @@ def show_help() -> None:
             st.session_state.help_slide = idx + 1; st.rerun()
 
         # 丸ポチ（クリックでそのページへジャンプ）
-
+        st.markdown("""
+<style>
+  div[class*="st-key-help_dot_"] button{border:none !important;background:transparent !important;
+     box-shadow:none !important;color:#C7CDD6 !important;font-size:17px !important;padding:0 !important;min-height:0 !important;line-height:1 !important;}
+  div[class*="st-key-help_dot_"] button:hover{color:#0F6CBD !important;}
+</style>
+""", unsafe_allow_html=True)
         dcols = st.columns(n)
         for _i in range(n):
             if dcols[_i].button("●" if _i == idx else "○", key=f"help_dot_{_i}", use_container_width=True):
@@ -5104,18 +5321,8 @@ def show_control_mode(res: dict) -> None:
     # リアルタイム動的パラメータ算出
     reduc_kwh_mode = res["total_reduc_kwh"] * ratio
     reduc_bill_mode = res["gross_saving"] * ratio
-    payback_years_mode, _over_fee_mode = calc_payback(
-        res["total_invest"],
-        reduc_bill_mode - res["sys_fee"],
-        reduc_bill_mode,
-    )
-
-    over_fee_html = (
-        '<span style="font-size:13px;color:#C00000;">（利用料超過）</span>'
-        if _over_fee_mode
-        else ""
-    )
-
+    payback_years_mode, _over_fee_mode = calc_payback(res["total_invest"], reduc_bill_mode - res["sys_fee"], reduc_bill_mode)
+    
     st.markdown(f"""
 <div style="background:{cfg['bg_color']}; border-radius:12px; padding:25px; border: 1.5px solid #cbd5e1; margin-top:15px; box-shadow: 0 4px 6px rgba(0,0,0,0.03);">
     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
@@ -5136,7 +5343,7 @@ def show_control_mode(res: dict) -> None:
         </div>
         <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display:flex; flex-direction:column; justify-content:center;">
             <div style="font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 5px;">投資回収期間（年）</div>
-            <div style="font-size: 33px; font-weight: bold; color: #2F5496;">{payback_years_mode:.1f}{over_fee_html}</div>
+            <div style="font-size: 33px; font-weight: bold; color: #2F5496;">{payback_years_mode:.1f}{'<span style=\"font-size:13px;color:#C00000;\">（利用料超過）</span>' if _over_fee_mode else ''}</div>
         </div>
     </div>
 </div>
@@ -5971,7 +6178,23 @@ def _quote_preview_html(head, comp, hw_lines, eng_lines, round_adj,
     """御見積書（顧客版）レイアウトのHTMLを生成。cost_view=Trueで単価を原価表示。"""
     def y(v):
         return f"{v:,.0f}"
-    css = f"<style>{read_css_file('quote.css')}</style>"
+    css = """
+    <style>
+    .qv{font-family:'Yu Gothic','Meiryo',sans-serif;color:#111;background:#fff;padding:18px 22px;width:720px;margin:auto;border:1px solid #ccc;}
+    .qv h1{text-align:center;letter-spacing:.5em;font-size:24px;margin:4px 0 10px;}
+    .qv table{border-collapse:collapse;width:100%;font-size:12px;}
+    .qv .meta td{padding:2px 6px;vertical-align:top;border:none;}
+    .qv .items th{background:#e9e9e9;border:1px solid #999;padding:4px 6px;}
+    .qv .items td{border:1px solid #999;padding:3px 6px;}
+    .qv .r{text-align:right;} .qv .c{text-align:center;}
+    .qv .sub{background:#f5f5f5;font-weight:bold;}
+    .qv .big{border:2px solid #333;padding:4px 10px;font-size:18px;font-weight:bold;}
+    .qv .stampin{display:inline-flex;width:33px;height:33px;border:1.2px solid #c00;border-radius:50%;
+        color:#c00;font-size:9px;font-weight:bold;align-items:center;justify-content:center;
+        writing-mode:vertical-rl;text-orientation:upright;line-height:1.0;letter-spacing:0.5px;overflow:hidden;}
+    .qv .tot td{border:1px solid #999;padding:3px 12px;}
+    </style>
+    """
     rows_html = ""
     no = 0
     def line_row(ln):
@@ -6504,6 +6727,13 @@ def render_results_dashboard(res, app_data, client_name="", gyotai=""):
         else:
             st.caption("資料（PowerPoint / Word）にそのまま貼れる PNG を生成します。生成後、各画像をダウンロードできます。")
 
+            # 年月の返り（前戻り）チェック：推移グラフの横軸が不正になるため警告
+            _mreg_img = check_month_regression(list(df.get("月", [])))
+            if _mreg_img:
+                _di = "／".join(f"{_i + 1}行目「{_c}」（{_w}）" for _i, _p, _c, _w in _mreg_img)
+                st.error(f"⚠️ 注意！！！ 年月の返り／重複があります：{_di}。"
+                         "検針票の『月』をご確認ください──このままだと推移グラフ（①使用量＋デマンド）の横軸が不正確になります。")
+
             def _month_label(v):
                 import re
                 s = str(v).strip()
@@ -6568,8 +6798,16 @@ def render_results_dashboard(res, app_data, client_name="", gyotai=""):
 
             if st.button("画像を生成 / 更新", key="gen_slide_imgs"):
                 try:
+                    # グラフタイトル：施設全体の電力推移（初月〜最終月）と対象設備
+                    import re as _re
+                    def _ym_jp(s):
+                        _m = _re.search(r"(\d{4})\D{0,3}(\d{1,2})", str(s))
+                        return f"{int(_m.group(1))}年{int(_m.group(2))}月" if _m else ""
+                    _yl = [y for y in (_ym_jp(m) for m in _months) if y]
+                    _period = f"（{_yl[0]}～{_yl[-1]}）" if _yl else ""
+                    _chart_title = f"施設全体の電力推移{_period}と対象設備"
                     st.session_state["_img_chart"] = make_demand_chart_png(
-                        _months, _usage, _reduc, _demand, target_units=_n_ctrl)
+                        _months, _usage, _reduc, _demand, target_units=_n_ctrl, title=_chart_title)
                     st.session_state["_img_list"] = make_control_list_pngs(
                         _list_items, total_units=_n_total, controllable_units=_n_ctrl,
                         cols=(_sel_cols or None))
@@ -7630,10 +7868,125 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    load_css()
-
     # 🎨 グローバルCSS (③ナビゲーションボタンの通常・ホバー時スタイル完全反転仕様)
+    st.markdown("""
+<style>
+    /* ベースフォント */
+    html, body, [class*="css"] { font-family: 'Yu Gothic', 'Meiryo UI', sans-serif; }
+    /* サイドバー */
+    section[data-testid="stSidebar"] { background: #1A2744; }
+    section[data-testid="stSidebar"] * { color: #ECEFF4 !important; }
+    section[data-testid="stSidebar"] input,
+    section[data-testid="stSidebar"] select { background: #243360 !important; color: #fff !important; }
 
+    /* 🎨 サイドバー入力：白背景の項目を濃紺(#243360)・白文字・白枠に統一 */
+    section[data-testid="stSidebar"] [data-baseweb="input"],
+    section[data-testid="stSidebar"] [data-baseweb="base-input"],
+    section[data-testid="stSidebar"] [data-baseweb="textarea"],
+    section[data-testid="stSidebar"] [data-baseweb="select"] > div,
+    section[data-testid="stSidebar"] [data-testid="stNumberInput"] > div,
+    section[data-testid="stSidebar"] [data-testid="stNumberInputContainer"] {
+        background-color: #243360 !important;
+        border: 1px solid #FFFFFF !important;
+        color: #fff !important;
+    }
+    section[data-testid="stSidebar"] [data-baseweb="input"] input,
+    section[data-testid="stSidebar"] [data-baseweb="select"] div,
+    section[data-testid="stSidebar"] textarea {
+        background-color: #243360 !important;
+        color: #fff !important;
+    }
+    /* number_input の ＋/− ステッパーボタンも濃紺・白アイコン（仕切りのみ白） */
+    section[data-testid="stSidebar"] [data-testid="stNumberInput"] button,
+    section[data-testid="stSidebar"] [data-testid="stNumberInputStepUp"],
+    section[data-testid="stSidebar"] [data-testid="stNumberInputStepDown"] {
+        background-color: #243360 !important;
+        color: #fff !important;
+        border-left: 1px solid #FFFFFF !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stNumberInput"] button:hover,
+    section[data-testid="stSidebar"] [data-testid="stNumberInputStepUp"]:hover,
+    section[data-testid="stSidebar"] [data-testid="stNumberInputStepDown"]:hover {
+        background-color: #34487a !important;
+        color: #fff !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stNumberInput"] button svg,
+    section[data-testid="stSidebar"] [data-testid="stNumberInput"] button svg path {
+        fill: #fff !important;
+        color: #fff !important;
+    }
+    /* セレクトボックスのドロップダウン矢印・選択文字も白 */
+    section[data-testid="stSidebar"] [data-baseweb="select"] svg { fill: #fff !important; }
+
+    /* 🎨 サイドバーの expander（ドロップダウン）ヘッダー：開いている時も濃紺、ホバー時のみ白 */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details > summary,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        background-color: #243360 !important;
+        color: #fff !important;
+        border-color: #FFFFFF !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary p,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary span,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary svg {
+        color: #fff !important; fill: #fff !important;
+    }
+    /* ホバー時のみ白背景・濃紺文字に反転 */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
+        background-color: #FFFFFF !important;
+        color: #243360 !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover p,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover span,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover svg {
+        color: #243360 !important; fill: #243360 !important;
+    }
+    /* 展開後の中身の背景はサイドバーの濃紺を維持（白パネルを出さない） */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details > div,
+    section[data-testid="stSidebar"] [data-testid="stExpanderDetails"] {
+        background-color: transparent !important;
+    }
+    /* メトリクス */
+    [data-testid="stMetricValue"] { font-size: 1.9rem !important; font-weight: 800 !important; }
+
+    /* ✍️ サイドバー(濃紺背景)の入力：白いキャレット(｜)で入力状態を明示（文字色・背景はいじらない＝白文字のまま） */
+    section[data-testid="stSidebar"] [data-testid="stTextInput"] input,
+    section[data-testid="stSidebar"] [data-testid="stNumberInput"] input,
+    section[data-testid="stSidebar"] .stTextArea textarea {
+        caret-color: #FFFFFF !important;
+    }
+    /* フォーカス時は枠を青くして入力可能状態を分かりやすく（全画面共通） */
+    [data-testid="stTextInput"] input:focus,
+    [data-testid="stNumberInput"] input:focus,
+    .stTextInput input:focus {
+        border: 1.5px solid #0F6CBD !important;
+        box-shadow: 0 0 0 2px rgba(15,108,189,0.20) !important;
+    }
+    
+    /* 🧭 ③ クイックナビゲーション of スタイル完全反転 & ホバー制御 */
+    section[data-testid="stSidebar"] div.stButton > button {
+        background-color: #243360 !important;
+        color: #fff !important;
+        border: 1.5px solid #243360 !important;
+        font-weight: bold;
+        transition: all 0.3s ease-in-out;
+        border-radius: 6px;
+    }
+    section[data-testid="stSidebar"] div.stButton > button:hover {
+        background-color: #fff !important;
+        color: #243360 !important;
+        border: 1.5px solid #243360 !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    
+    /* アラートボックス */
+    .stAlert { border-radius: 8px; }
+    /* ヘッダー */
+    h1 { color: #1F3864; }
+    h2, h3 { color: #2F5496; border-bottom: 2px solid #E0E8F8; padding-bottom: 4px; }
+</style>
+""", unsafe_allow_html=True)
 
     # ── セッション状態の初期化 ────────────────────
     if "app_data" not in st.session_state:
@@ -7814,6 +8167,32 @@ def main():
             f"燃料費調整額 {'✅自動反映' if _colon('燃料費調整額', True) else '— 排除（列なし/空）'} ／ "
             f"再エネ賦課金 {'✅自動反映' if _colon('再エネ賦課金') else '— 排除（列なし/空）'}"
             "　…テンプレの月別列があれば自動反映、無ければ自動で排除します。")
+
+        # ── 時間帯別単価(TOU)の反映（既定OFF・追加専用／いつでも切替→再試算）──
+        _tou_any = any(_colon(c) for c in ("夏季ピーク単価", "平日昼間単価", "夜間休日単価"))
+        st.session_state.setdefault("opt_tou_enabled", False)
+        tou_enabled = st.toggle(
+            "時間帯別単価を反映する（TOU）", key="opt_tou_enabled",
+            help="夏季ピーク/平日昼間/夜間休日の単価がある月だけ、削減kWhをその時間帯単価で評価します。"
+                 "OFFなら従来どおり（月平均の電力量単価）。単価が無い月は自動的に従来計算に戻ります。")
+        _TOU_POLICY_LABELS = {"average": "平均採用（中立・推奨）",
+                              "peak": "ピーク採用（上振れ）",
+                              "conservative": "保守採用（控えめ）"}
+        st.session_state.setdefault("opt_tou_policy", "average")
+        if tou_enabled:
+            tou_policy = st.selectbox(
+                "└ 反映の考え方（同じ月に複数バンドがある場合の評価）",
+                list(_TOU_POLICY_LABELS.keys()), format_func=lambda k: _TOU_POLICY_LABELS[k],
+                key="opt_tou_policy",
+                help="1つしか単価が無い月はその単価をそのまま使用します。既定は中立（平均）。")
+            if not _tou_any:
+                st.caption("※ 現在の検針票に時間帯別単価が無いため、結果は変わりません（単価のある月だけ反映）。")
+            else:
+                st.caption(f"↳ 時間帯別単価のある月のみ『{_TOU_POLICY_LABELS[tou_policy]}』で評価（他月は従来どおり）。")
+        else:
+            tou_policy = st.session_state.get("opt_tou_policy", "average")
+            if _tou_any:
+                st.info("💡 時間帯別単価を検出しました。反映するには『時間帯別単価を反映する（TOU）』をONにしてください。")
 
         with st.expander("月別単価欄の状況・電力会社プリセット", expanded=False):
             st.caption(
@@ -8223,6 +8602,8 @@ def main():
                 app_data["calc_options"] = {
                     "seasonal_ac": bool(seasonal_ac),
                     "gyotai_consider": bool(gyotai_consider),
+                    "tou_enabled": bool(tou_enabled),
+                    "tou_policy": tou_policy,
                 }
                 _ac_ovr = st.session_state.get("manual_ac") if gyotai == MANUAL_GYOTAI else None
                 res = calc_simulation(df_safe, app_data, gyotai, ctrl_ratio,
@@ -8272,7 +8653,28 @@ def main():
 
     # ── コンパクト・ヘッダー（案件情報＋ステータスバッジ＋メニュー一体・カード・sticky）──
     _cust = (str(client_name).strip() + " 御中") if str(client_name).strip() else "（顧客名未入力）"
-
+    st.markdown("""
+<style>
+  [data-testid="stDeployButton"]{display:none !important;}
+  .block-container{padding-top:1.1rem !important;}
+  .st-key-dps_header{position:sticky;top:0;z-index:999;background:#FFFFFF;
+     border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 1px 3px rgba(16,24,40,.06);
+     padding:10px 16px 6px 16px;margin-bottom:12px;}
+  .dps-hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:6px;}
+  .dps-hdr .sys{font-size:11px;color:#9CA3AF;}
+  .dps-hdr .cust{font-size:18px;font-weight:700;color:#0F2E5D;line-height:1.25;}
+  .dps-hdr .meta{font-size:12px;color:#6B7280;margin-top:1px;}
+  .dps-hdr .R{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .dps-hdr .badge{font-size:12px;border-radius:999px;padding:3px 11px;border:1px solid;white-space:nowrap;}
+  .dps-hdr .badge .dot{font-size:9px;vertical-align:1px;margin-right:5px;}
+  .b-green{background:#E9F5EE;color:#107C41;border-color:#C4E6D1;}
+  .b-amber{background:#FBF3E2;color:#9A6700;border-color:#EFDDB0;}
+  .b-navy{background:#EBF1F8;color:#0F2E5D;border-color:#CBD9EE;}
+  .st-key-dps_header .stButton>button{border:1px solid #E5E7EB;border-radius:8px;background:#FFFFFF;
+     color:#374151;font-weight:500;font-size:13px;padding:5px 4px;min-height:0;}
+  .st-key-dps_header .stButton>button:hover{background:#0F2E5D;color:#FFFFFF;border-color:#0F2E5D;}
+</style>
+""", unsafe_allow_html=True)
     with st.container(key="dps_header"):
         st.markdown(
             "<div class='dps-hdr'><div>"
@@ -8313,7 +8715,23 @@ def main():
         st.caption("指定テンプレート以外（別ツール作成のExcel等）でも、全シートを走査して"
                    "列名の表記ゆれ・半角カナ・改行を自動判定して取り込みます。")
         # ── Upload（ボタンのみ）／サンプル値代入／テンプレDL の3ボタン横並び ──
-
+        st.markdown("""
+<style>
+  /* file_uploader をドロップゾーンではなく「Upload」ボタンのみに */
+  .st-key-file_upload [data-testid="stFileUploaderDropzoneInstructions"]{ display:none !important; }
+  .st-key-file_upload label{ display:none !important; }
+  .st-key-file_upload section[data-testid="stFileUploaderDropzone"]{
+      padding:0 !important; border:none !important; background:transparent !important; min-height:0 !important; }
+  .st-key-file_upload section[data-testid="stFileUploaderDropzone"] > div{ width:100% !important; margin:0 !important; }
+  .st-key-file_upload section[data-testid="stFileUploaderDropzone"] button{
+      width:100% !important; min-height:2.6rem !important; position:relative !important;
+      color:transparent !important; background:#0F6CBD !important; border-color:#0F6CBD !important; }
+  .st-key-file_upload section[data-testid="stFileUploaderDropzone"] button::after{
+      content:"Upload"; color:#fff; position:absolute; inset:0; font-weight:600;
+      display:flex; align-items:center; justify-content:center; }
+  .st-key-load_sample_btn button, .st-key-tmpl_dl_btn button{ min-height:2.6rem !important; width:100% !important; }
+</style>
+""", unsafe_allow_html=True)
         _bc1, _bc2, _bc3 = st.columns(3)
         with _bc1:
             uploaded = st.file_uploader("CSV / Excel をアップロード", type=["csv", "xlsx"], key="file_upload")
@@ -8341,16 +8759,42 @@ def main():
                 )
         st.caption("※ インポートファイル容量：200MB以下 ／ 形式：CSV・Excel（.xlsx）")
 
+        # 年月の自動連番（既定ON）：取込時に先頭の年月から12ヶ月を順番に埋める。OFFで取込値そのまま。
+        st.session_state.setdefault("opt_month_autoseq", True)
+        st.toggle("年月を先頭月から自動連番にする（取込時）", key="opt_month_autoseq",
+                  help="ON（基本）：最初に記載された年月を起点に、以降を6月・7月…と自動で連番に整えて取り込みます。"
+                       "OFF：取り込んだ年月をそのまま使います（あえてその年月にしたい場合）。")
+
         if uploaded is not None:
             try:
                 df_up, used_sheet, hdr_sc = load_uploaded_table(uploaded)
                 matched = {m for m in (_canonical_for(c) for c in df_up.columns) if m}
                 df_sanitized = sanitize_columns(df_up)
+                # 取込"元データ"の年月の返りを先に検出（自動連番で補正する前）
+                _raw_months = list(df_sanitized.get("月", []))
+                _reg_raw = check_month_regression(_raw_months)
+                _did_seq = False
+                if st.session_state.get("opt_month_autoseq", True):
+                    _seq = resequence_months(_raw_months)
+                    if _seq:
+                        df_sanitized = df_sanitized.copy()
+                        df_sanitized["月"] = _seq
+                        _did_seq = True
                 st.session_state.df_input = df_sanitized
 
                 sheet_note = f"（シート「{used_sheet}」を採用）" if not uploaded.name.lower().endswith(".csv") else ""
                 _req7 = len([c for c in matched if c in REQUIRED_COLS])
                 st.success(f"データを取り込みました{sheet_note}：{len(df_sanitized)}行 ／ 主要列 {_req7}/7 を認識")
+                # 取込元データに年月の返り／重複があれば警告（自動連番ON時は補正した旨も表示）
+                if _reg_raw:
+                    _rd = "／".join(f"{_i + 1}番目「{_c}」（{_w}）" for _i, _p, _c, _w in _reg_raw)
+                    if _did_seq:
+                        st.warning(f"⚠️ 取込データに年月の返り／重複がありました：{_rd}。"
+                                   "『年月を先頭月から自動連番にする』がONのため、先頭月から連番に自動補正しました"
+                                   "（原本のまま取り込みたい場合はトグルをOFFにして再取込）。")
+                    else:
+                        st.error(f"⚠️ 注意！！！ 取込データに年月の返り／重複があります：{_rd}。"
+                                 "検針票の『月』をご確認ください──このままだと推移グラフの横軸が不正確になります。")
                 # 任意列（燃調・再エネ）の取込状況を明示
                 _opt_msgs = []
                 _opt_msgs.append("燃料費調整額 " + ("✅反映" if "燃料費調整額" in df_sanitized.columns and float(df_sanitized["燃料費調整額"].abs().sum() or 0) > 0 else "— 排除"))
@@ -8451,6 +8895,14 @@ def main():
             }
         )
         st.session_state.df_input = edited_df
+
+        # ── 年月の返り（前戻り）チェック：推移グラフの横軸が不正になるため警告 ──
+        _mreg = check_month_regression(list(st.session_state.df_input.get("月", [])))
+        if _mreg:
+            _detail = "／".join(f"{_i + 1}行目「{_cur}」（{_why}）" for _i, _prev, _cur, _why in _mreg)
+            st.error(f"⚠️ 注意！！！ 年月の返り／重複があります：{_detail}。"
+                     "年月は前に戻らない前提です（12月→1月の年跨ぎは正常）。検針票の『月』をご確認ください"
+                     "──このままだと推移グラフの横軸が不正確になります。")
 
         # ── A：使用量の振れが大きい場合は『季節性（ベースロード法）』配慮を推奨（※月の削除はしない）──
         _sw = _usage_swing(st.session_state.df_input)
@@ -8799,6 +9251,13 @@ def main():
         st.info("画像出力には matplotlib / pillow が必要です。`pip install matplotlib pillow` を実行してください。")
     else:
         st.caption("資料（PowerPoint / Word）にそのまま貼れる PNG を生成します。生成後、各画像をダウンロードできます。")
+
+        # 年月の返り（前戻り）チェック：推移グラフの横軸が不正になるため警告
+        _mreg_img = check_month_regression(list(df.get("月", [])))
+        if _mreg_img:
+            _di = "／".join(f"{_i + 1}行目「{_c}」（{_w}）" for _i, _p, _c, _w in _mreg_img)
+            st.error(f"⚠️ 注意！！！ 年月の返り／重複があります：{_di}。"
+                     "検針票の『月』をご確認ください──このままだと推移グラフ（①使用量＋デマンド）の横軸が不正確になります。")
 
         # ── 月ラベルを「○月」へ整形 ──
         def _month_label(v):

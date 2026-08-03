@@ -177,8 +177,8 @@ def make_demand_chart_png(
     # ── 軸の体裁 ──
     axL.set_xticks(list(x))
     axL.set_xticklabels(_short_month_labels(months))
-    axL.set_ylabel("Usage (kWh)", fontsize=10)
-    axR.set_ylabel("Max Demand (kW)", fontsize=10)
+    axL.set_ylabel("使用電力量（kWh）", fontsize=10)
+    axR.set_ylabel("最大需要電力（kW）", fontsize=10)
     axL.set_ylim(0, ymax_L)
     axR.set_ylim(0, ymax_R)
     axL.set_axisbelow(True)
