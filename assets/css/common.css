@@ -296,15 +296,13 @@ section[data-testid="stSidebar"] [data-baseweb="input"], section[data-testid="st
 }
 
 
-.st-emotion-cache-e1adlt{
-   border:solid 1px #ccc !important;
-}
+
 .st-emotion-cache-19cfm8f{
   height: inherit !important;
 }
 
 
-section[data-testid="stSidebar"] [data-testid="stExpander"] details,div[data-testid="stNumberInputContainer"],div[data-testid="stNumberInputContainer"],section[data-testid="stSidebar"] [data-baseweb="select"]{
+section[data-testid="stSidebar"] [data-testid="stExpander"] details,div[data-testid="stNumberInputContainer"],div[data-testid="stNumberInputContainer"],section[data-testid="stSidebar"] [data-baseweb="select"],.st-emotion-cache-e1adlt{
     border: solid 1px #5870a4 !important;
 }
 section[data-testid="stSidebar"] [data-baseweb="select"]{
