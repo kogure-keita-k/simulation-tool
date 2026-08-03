@@ -294,7 +294,6 @@ section[data-testid="stSidebar"]{
     border-radius: 0.5rem;
     overflow: hidden;
 }
-
 section[data-testid="stSidebar"] [data-baseweb="input"], section[data-testid="stSidebar"] [data-baseweb="base-input"], section[data-testid="stSidebar"] [data-baseweb="textarea"], section[data-testid="stSidebar"] [data-baseweb="select"] > div{
     background:none !important;
     border:none !important;
