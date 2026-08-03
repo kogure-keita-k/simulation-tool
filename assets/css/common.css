@@ -246,7 +246,6 @@ section[data-testid="stSidebar"]{
     section[data-testid="stSidebar"] div.stButton > button {
         background-color: #243360 !important;
         color: #fff !important;
-        border: 1.5px solid #243360 !important;
         font-weight: bold;
         transition: all 0.3s ease-in-out;
         border-radius: 6px;
