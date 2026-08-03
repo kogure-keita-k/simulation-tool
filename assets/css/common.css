@@ -307,3 +307,7 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] details,div[data-tes
 section[data-testid="stSidebar"] [data-baseweb="select"]{
   border-radius: 6px;
 }
+
+.st-emotion-cache-e1adlt{
+  background: none !important;
+}
